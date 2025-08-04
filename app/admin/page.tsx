@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Eye, RefreshCw, X } from "lucide-react";
+import { Copy, Eye, RefreshCw, X, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -111,6 +111,13 @@ export default function AdminDashboard() {
       .catch(() => {
         toast.error("Failed to copy message");
       });
+  };
+
+  const openWhatsAppChat = (registration: Registration) => {
+    // Ensure phone is a string and not null/undefined
+    const phone = String(registration.phone || "").replace(/\D/g, "");
+    // Change '91' to your country code if needed
+    window.open(`https://wa.me/91${phone}`, "_blank");
   };
 
   const openImage = (url: string) => {
@@ -264,6 +271,16 @@ export default function AdminDashboard() {
                             }
                           >
                             <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-2"
+                            onClick={() => openWhatsAppChat(registration)}
+                            disabled={!registration.phone}
+                            aria-label="Open WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
