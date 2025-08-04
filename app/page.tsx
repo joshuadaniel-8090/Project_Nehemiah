@@ -291,7 +291,7 @@ export default function RegistrationPage() {
                   {/* QR Code Section */}
                   <div className="text-center">
                     <h3 className="text-lg font-semibold mb-4">
-                      Scan to Pay ₹500
+                      Scan to Pay ₹20
                     </h3>
                     <Image
                       src="/qr-code.png"
