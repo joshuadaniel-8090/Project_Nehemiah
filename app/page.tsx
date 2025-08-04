@@ -158,7 +158,8 @@ export default function RegistrationPage() {
               Registration Received!
             </h2>
             <p className="text-gray-600 mb-6">
-              Thank you for registering. Your submission is under review and you&apos;ll be contacted soon.
+              Thank you for registering. You will receive an acknowledgment
+              through WhatsApp.
             </p>
             <Button onClick={() => window.location.reload()} className="w-full">
               Register Another Person
