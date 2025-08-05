@@ -17,7 +17,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Eye, RefreshCw, X, MessageCircle, Search, Ghost } from "lucide-react";
+import {
+  Copy,
+  Eye,
+  RefreshCw,
+  X,
+  MessageCircle,
+  Search,
+  Ghost,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -167,7 +175,9 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <Link href="/">
-              <Button variant= "ghost" className="text-gray-600 bg-white">Home</Button>
+              <Button variant="ghost" className="text-gray-600 bg-white">
+                Home
+              </Button>
             </Link>
 
             <h1 className="text-3xl font-bold text-gray-900">

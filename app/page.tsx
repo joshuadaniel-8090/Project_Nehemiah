@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Upload, CheckCircle, ArrowLeft } from "lucide-react";
+import { ChevronRight, Upload, CheckCircle, ArrowLeft, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import QRCode from "react-qr-code";
 
 interface FormData {
   name: string;
   phone: string;
   email: string;
   paymentScreenshot: File | null;
+  ticketCount: number;
 }
 
 export default function RegistrationPage() {
@@ -26,9 +28,11 @@ export default function RegistrationPage() {
     phone: "",
     email: "",
     paymentScreenshot: null,
+    ticketCount: 1,
   });
+  const TICKET_PRICE = 20;
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -55,6 +59,15 @@ export default function RegistrationPage() {
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(formData.phone.replace(/\D/g, ""))) {
       toast.error("Please enter a valid 10-digit phone number");
+      return false;
+    }
+
+    if (
+      typeof formData.ticketCount !== "number" ||
+      formData.ticketCount < 1 ||
+      formData.ticketCount > 10
+    ) {
+      toast.error("Please select between 1 and 10 tickets");
       return false;
     }
 
@@ -99,6 +112,16 @@ export default function RegistrationPage() {
     }
   };
 
+  // Generate multiple raffle numbers
+  const generateRaffleNumbers = (count: number) => {
+    const numbers = [];
+    for (let i = 0; i < count; i++) {
+      const num = Math.floor(Math.random() * 250) + 1;
+      numbers.push(`#${num.toString().padStart(3, "0")}`);
+    }
+    return numbers.join(", ");
+  };
+
   const handleSubmit = async () => {
     if (!formData.paymentScreenshot) {
       toast.error("Please upload a payment screenshot");
@@ -117,12 +140,18 @@ export default function RegistrationPage() {
         return;
       }
 
+      // Generate raffle numbers
+      const raffleNumbers = generateRaffleNumbers(formData.ticketCount);
+
       // Save registration
       const { error } = await supabase.from("registrations").insert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
         payment_screenshot_url: screenshotUrl,
+        ticket_count: formData.ticketCount,
+        raffle_numbers: raffleNumbers,
+        created_at: new Date().toISOString(),
       });
 
       if (error) {
@@ -143,8 +172,8 @@ export default function RegistrationPage() {
   };
 
   const openUPILink = () => {
-    const upiLink =
-      "upi://pay?pa=8072609214@superyes&pn=Event Registration&am=20&cu=INR&tn=Event Registration Payment";
+    const amount = formData.ticketCount * TICKET_PRICE;
+    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment`;
     window.open(upiLink, "_blank");
   };
 
@@ -249,6 +278,27 @@ export default function RegistrationPage() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="ticketCount">Number of Tickets *</Label>
+                <Input
+                  id="ticketCount"
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={formData.ticketCount}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "ticketCount",
+                      Math.max(1, Math.min(10, Number(e.target.value)))
+                    )
+                  }
+                  className="h-12"
+                />
+                <p className="text-xs text-gray-500">
+                  You can buy up to 10 tickets at once.
+                </p>
+              </div>
+
               <Button onClick={handleNext} className="w-full h-12 text-lg">
                 Next
                 <ChevronRight className="w-5 h-5 ml-2" />
@@ -262,7 +312,7 @@ export default function RegistrationPage() {
               <Button
                 variant="ghost"
                 onClick={handleBack}
-                className="absolute left- top- p-2"
+                className="absolute p-2"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -274,18 +324,19 @@ export default function RegistrationPage() {
             <CardContent className="space-y-6">
               {/* QR Code Section */}
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-4">Scan to Pay ₹20</h3>
-                <Image
-                  src="/qr-code.png"
-                  alt="GPay QR Code"
-                  width={128}
-                  height={128}
-                  className="w-32 h-32 mx-auto"
-                  priority
-                />
+                <h3 className="text-lg font-semibold mb-4">
+                  Scan to Pay ₹{formData.ticketCount * TICKET_PRICE}
+                </h3>
+                <div className="w-32 h-32 mx-auto">
+                  <QRCode
+                    value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${formData.ticketCount * TICKET_PRICE}&cu=INR&tn=Event Registration Payment`}
+                    size={128}
+                  />
+                </div>
               </div>
               <p className="text-sm text-gray-600 mt-2">
-                Registration Fee: ₹20
+                Registration Fee: ₹{TICKET_PRICE} per ticket (Total: ₹
+                {formData.ticketCount * TICKET_PRICE})
               </p>
 
               {/* UPI Link Button */}
@@ -296,7 +347,6 @@ export default function RegistrationPage() {
               >
                 Pay with UPI App
               </Button>
-
               {/* File Upload */}
               <div className="space-y-2">
                 <Label htmlFor="screenshot">Upload Payment Screenshot *</Label>
