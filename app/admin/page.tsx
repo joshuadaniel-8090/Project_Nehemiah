@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase, Registration } from "@/lib/supabase";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Eye, RefreshCw, X, MessageCircle } from "lucide-react";
+import { Copy, Eye, RefreshCw, X, MessageCircle, Search, Ghost } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(""); // <-- Search state
 
   // Simple password protection
   const ADMIN_PASSWORD = "admin123";
@@ -128,6 +130,11 @@ export default function AdminDashboard() {
     setPreviewUrl(null);
   };
 
+  // Filter registrations by name
+  const filteredRegistrations = registrations.filter((r) =>
+    r.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -159,22 +166,38 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
+            <Link href="/">
+              <Button variant= "ghost" className="text-gray-600 bg-white">Home</Button>
+            </Link>
+
             <h1 className="text-3xl font-bold text-gray-900">
               Admin Dashboard
             </h1>
             <p className="text-gray-600">Manage event registrations</p>
           </div>
-          <Button onClick={fetchRegistrations} disabled={isLoading}>
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+          <div className="flex items-center space-x-2">
+            <Input
+              type="text"
+              placeholder="Search by name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64"
             />
-            Refresh
-          </Button>
+            <Search className="w-5 h-5 text-gray-400" />
+            <Button onClick={fetchRegistrations} disabled={isLoading}>
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Registrations ({registrations.length})</CardTitle>
+            <CardTitle>
+              Registrations ({filteredRegistrations.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -182,7 +205,7 @@ export default function AdminDashboard() {
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
                 <p className="text-gray-600">Loading registrations...</p>
               </div>
-            ) : registrations.length === 0 ? (
+            ) : filteredRegistrations.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600">No registrations found</p>
               </div>
@@ -203,7 +226,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {registrations.map((registration) => (
+                    {filteredRegistrations.map((registration) => (
                       <TableRow key={registration.id}>
                         <TableCell className="font-medium">
                           {registration.name}

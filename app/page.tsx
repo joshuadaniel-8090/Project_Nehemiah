@@ -18,7 +18,7 @@ interface FormData {
 }
 
 export default function RegistrationPage() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [showPaymentPage, setShowPaymentPage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -63,12 +63,12 @@ export default function RegistrationPage() {
 
   const handleNext = () => {
     if (validateStep1()) {
-      setCurrentStep(2);
+      setShowPaymentPage(true);
     }
   };
 
   const handleBack = () => {
-    setCurrentStep(1);
+    setShowPaymentPage(false);
   };
 
   const uploadScreenshot = async (file: File): Promise<string | null> => {
@@ -178,7 +178,7 @@ export default function RegistrationPage() {
           <div className="flex items-center space-x-4">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                currentStep >= 1
+                !showPaymentPage
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-600"
               }`}
@@ -187,12 +187,12 @@ export default function RegistrationPage() {
             </div>
             <div
               className={`w-8 h-1 ${
-                currentStep >= 2 ? "bg-blue-600" : "bg-gray-200"
+                showPaymentPage ? "bg-blue-600" : "bg-gray-200"
               }`}
             />
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                currentStep >= 2
+                showPaymentPage
                   ? "bg-blue-600 text-white"
                   : "bg-gray-200 text-gray-600"
               }`}
@@ -202,156 +202,133 @@ export default function RegistrationPage() {
           </div>
         </div>
 
-        {/* Form Container with Animation */}
-        <div className="relative overflow-hidden">
-          <div
-            className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${(currentStep - 1) * 100}%)` }}
-          >
-            {/* Step 1: Personal Details */}
-            <div className="w-full flex-shrink-0">
-              <Card className="shadow-lg">
-                <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-2xl font-bold text-gray-900">
-                    Event Registration
-                  </CardTitle>
-                  <p className="text-gray-600">
-                    Enter your details to continue
+        {/* Form Container */}
+        {!showPaymentPage ? (
+          // Personal Details Page
+          <Card className="shadow-lg">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                Event Registration
+              </CardTitle>
+              <p className="text-gray-600">Enter your details to continue</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  className="h-12"
+                />
+              </div>
+
+              <Button onClick={handleNext} className="w-full h-12 text-lg">
+                Next
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          // Payment Page
+          <Card className="shadow-lg">
+            <CardHeader className="text-center pb-4">
+              <Button
+                variant="ghost"
+                onClick={handleBack}
+                className="absolute left- top- p-2"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                Payment
+              </CardTitle>
+              <p className="text-gray-600">Complete your registration</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* QR Code Section */}
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-4">Scan to Pay ₹20</h3>
+                <Image
+                  src="/qr-code.png"
+                  alt="GPay QR Code"
+                  width={128}
+                  height={128}
+                  className="w-32 h-32 mx-auto"
+                  priority
+                />
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Registration Fee: ₹20
+              </p>
+
+              {/* UPI Link Button */}
+              <Button
+                onClick={openUPILink}
+                variant="outline"
+                className="w-full h-12 text-green-600 border-green-600 hover:bg-green-50"
+              >
+                Pay with UPI App
+              </Button>
+
+              {/* File Upload */}
+              <div className="space-y-2">
+                <Label htmlFor="screenshot">Upload Payment Screenshot *</Label>
+                <div className="relative">
+                  <Input
+                    id="screenshot"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      handleFileChange(e.target.files?.[0] || null)
+                    }
+                    className="h-12 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <Upload className="absolute right-3 top-3 w-6 h-6 text-gray-400" />
+                </div>
+                {formData.paymentScreenshot && (
+                  <p className="text-sm text-green-600">
+                    ✓ {formData.paymentScreenshot.name}
                   </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={formData.name}
-                      onChange={(e) =>
-                        handleInputChange("name", e.target.value)
-                      }
-                      className="h-12"
-                    />
-                  </div>
+                )}
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      className="h-12"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email address"
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      className="h-12"
-                    />
-                  </div>
-
-                  <Button onClick={handleNext} className="w-full h-12 text-lg">
-                    Next
-                    <ChevronRight className="w-5 h-5 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Step 2: Payment */}
-            <div className="w-full flex-shrink-0">
-              <Card className="shadow-lg">
-                <CardHeader className="text-center pb-4">
-                  {currentStep === 2 && (
-                    <Button
-                      variant="ghost"
-                      onClick={handleBack}
-                      className="absolute left-4 top-4 p-2"
-                    >
-                      <ArrowLeft className="w-5 h-5" />
-                    </Button>
-                  )}
-                  <CardTitle className="text-2xl font-bold text-gray-900">
-                    Payment
-                  </CardTitle>
-                  <p className="text-gray-600">Complete your registration</p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* QR Code Section */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Scan to Pay ₹20
-                    </h3>
-                    <Image
-                      src="/qr-code.png"
-                      alt="GPay QR Code"
-                      width={128}
-                      height={128}
-                      className="w-32 h-32 mx-auto"
-                      priority
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Registration Fee: ₹20
-                  </p>
-
-                  {/* UPI Link Button */}
-                  <Button
-                    onClick={openUPILink}
-                    variant="outline"
-                    className="w-full h-12 text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    Pay with UPI App
-                  </Button>
-
-                  {/* File Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="screenshot">
-                      Upload Payment Screenshot *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="screenshot"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) =>
-                          handleFileChange(e.target.files?.[0] || null)
-                        }
-                        className="h-12 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      <Upload className="absolute right-3 top-3 w-6 h-6 text-gray-400" />
-                    </div>
-                    {formData.paymentScreenshot && (
-                      <p className="text-sm text-green-600">
-                        ✓ {formData.paymentScreenshot.name}
-                      </p>
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isLoading || !formData.paymentScreenshot}
-                    className="w-full h-12 text-lg"
-                  >
-                    {isLoading ? "Submitting..." : "Complete Registration"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
+              <Button
+                onClick={handleSubmit}
+                disabled={isLoading || !formData.paymentScreenshot}
+                className="w-full h-12 text-lg"
+              >
+                {isLoading ? "Submitting..." : "Complete Registration"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
