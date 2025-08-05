@@ -6,7 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Upload, CheckCircle, ArrowLeft, QrCode } from "lucide-react";
+import {
+  ChevronRight,
+  Upload,
+  CheckCircle,
+  ArrowLeft,
+  QrCode,
+  Camera,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import QRCode from "react-qr-code";
@@ -173,7 +182,7 @@ export default function RegistrationPage() {
 
   const openUPILink = () => {
     const amount = formData.ticketCount * TICKET_PRICE;
-    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment`;
+    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment of ${amount}`;
     window.open(upiLink, "_blank");
   };
 
@@ -280,20 +289,45 @@ export default function RegistrationPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="ticketCount">Number of Tickets *</Label>
-                <Input
-                  id="ticketCount"
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={formData.ticketCount}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "ticketCount",
-                      Math.max(1, Math.min(10, Number(e.target.value)))
-                    )
-                  }
-                  className="h-12"
-                />
+                <div className="flex items-center">
+                  <Input
+                    id="ticketCount"
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={formData.ticketCount}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "ticketCount",
+                        Math.max(1, Math.min(10, Number(e.target.value)))
+                      )
+                    }
+                    className="w-full h-12 mx-2"
+                  />
+                  <Button
+                    onClick={() =>
+                      handleInputChange(
+                        "ticketCount",
+                        Math.max(1, formData.ticketCount - 1)
+                      )
+                    }
+                    className="h-12 mr-4 w-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  >
+                    <Minus className="h-5 w-5" />
+                  </Button>
+
+                  <Button
+                    onClick={() =>
+                      handleInputChange(
+                        "ticketCount",
+                        Math.min(10, formData.ticketCount + 1)
+                      )
+                    }
+                    className="h-12 px-4 w-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </div>
                 <p className="text-xs text-gray-500">
                   You can buy up to 10 tickets at once.
                 </p>
@@ -329,7 +363,11 @@ export default function RegistrationPage() {
                 </h3>
                 <div className="w-32 h-32 mx-auto">
                   <QRCode
-                    value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${formData.ticketCount * TICKET_PRICE}&cu=INR&tn=Event Registration Payment`}
+                    value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${
+                      formData.ticketCount * TICKET_PRICE
+                    }&cu=INR&tn=Event Registration Payment of ${
+                      formData.ticketCount * TICKET_PRICE
+                    }`}
                     size={128}
                   />
                 </div>
@@ -348,26 +386,35 @@ export default function RegistrationPage() {
                 Pay with UPI App
               </Button>
               {/* File Upload */}
-              <div className="space-y-2">
-                <Label htmlFor="screenshot">Upload Payment Screenshot *</Label>
-                <div className="relative">
-                  <Input
-                    id="screenshot"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      handleFileChange(e.target.files?.[0] || null)
-                    }
-                    className="h-12 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <Upload className="absolute right-3 top-3 w-6 h-6 text-gray-400" />
-                </div>
-                {formData.paymentScreenshot && (
-                  <p className="text-sm text-green-600">
-                    ✓ {formData.paymentScreenshot.name}
-                  </p>
-                )}
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="screenshot"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleFileChange(e.target.files?.[0] || null)
+                  }
+                  className="h-12 w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <Button
+                  onClick={() => {
+                    const input = document.getElementById(
+                      "screenshot"
+                    ) as HTMLInputElement;
+                    input.capture = "environment";
+                    input.click();
+                  }}
+                  className="h-12 w-12 text-gray-400 bg-whit rounded-full"
+                >
+                  <Camera className="w-12 h-12 text-gray-400" />
+                </Button>
+                {/* <Upload className="h-12 w-12 text-gray-400" /> */}
               </div>
+              {formData.paymentScreenshot && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✓ {formData.paymentScreenshot.name}
+                </p>
+              )}
 
               <Button
                 onClick={handleSubmit}
