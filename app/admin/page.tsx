@@ -17,15 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Copy,
-  Eye,
-  RefreshCw,
-  X,
-  MessageCircle,
-  Search,
-  Ghost,
-} from "lucide-react";
+import { Copy, Eye, RefreshCw, X, MessageCircle, Search } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -34,7 +26,7 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(""); // <-- Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Simple password protection
   const ADMIN_PASSWORD = "admin123";
@@ -77,56 +69,61 @@ export default function AdminDashboard() {
     }
   };
 
-  // Generate a unique 3-digit raffle number with leading zeros and a "#"
-  const generateRaffleNumber = () => {
-    const num = Math.floor(Math.random() * 250) + 1; // 1 to 250 inclusive
-    return `#${num.toString().padStart(3, "0")}`;
-  };
-
   const handleVerify = async (registration: Registration) => {
     if (registration.status === "verified") return;
 
-    const raffleNumber = generateRaffleNumber();
+    // Generate multiple raffle numbers based on ticket count
+    const generateRaffleNumbers = (count: number) => {
+      const numbers = [];
+      for (let i = 0; i < count; i++) {
+        const num = Math.floor(Math.random() * 250) + 1;
+        numbers.push(`#${num.toString().padStart(3, "0")}`);
+      }
+      return numbers.join(", ");
+    };
+
+    const raffleNumbers = generateRaffleNumbers(registration.ticket_count || 1);
+
     const { error } = await supabase
       .from("registrations")
       .update({
         status: "verified",
-        raffle_number: raffleNumber,
+        raffle_numbers: raffleNumbers,
         updated_at: new Date().toISOString(),
       })
       .eq("id", registration.id);
 
     if (error) {
-      toast.error("Failed to verify registration and assign raffle number");
+      toast.error("Failed to verify registration");
       return;
     }
 
-    toast.success("Registration verified and raffle number assigned!");
+    toast.success(
+      `Verified and assigned ${registration.ticket_count || 1} raffle numbers!`
+    );
     fetchRegistrations();
   };
 
   const copyWhatsAppMessage = (registration: Registration) => {
-    if (!registration.raffle_number || registration.status !== "verified") {
-      toast.error("Please verify and assign a raffle number first");
+    if (!registration.raffle_numbers || registration.status !== "verified") {
+      toast.error("Please verify first");
       return;
     }
 
-    const message = `Hey ${registration.name}, your registration is verified! 🎉 Your raffle number is ${registration.raffle_number}. Thanks for your participation.`;
+    const message = `Hey ${registration.name}, your registration for ${
+      registration.ticket_count || 1
+    } ticket(s) is verified! 🎉 Your raffle numbers are: ${
+      registration.raffle_numbers
+    }. Thanks for participating!`;
 
     navigator.clipboard
       .writeText(message)
-      .then(() => {
-        toast.success("WhatsApp message copied to clipboard");
-      })
-      .catch(() => {
-        toast.error("Failed to copy message");
-      });
+      .then(() => toast.success("Message copied!"))
+      .catch(() => toast.error("Failed to copy"));
   };
 
   const openWhatsAppChat = (registration: Registration) => {
-    // Ensure phone is a string and not null/undefined
     const phone = String(registration.phone || "").replace(/\D/g, "");
-    // Change '91' to your country code if needed
     window.open(`https://wa.me/91${phone}`, "_blank");
   };
 
@@ -138,7 +135,6 @@ export default function AdminDashboard() {
     setPreviewUrl(null);
   };
 
-  // Filter registrations by name
   const filteredRegistrations = registrations.filter((r) =>
     r.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -179,7 +175,6 @@ export default function AdminDashboard() {
                 Home
               </Button>
             </Link>
-
             <h1 className="text-3xl font-bold text-gray-900">
               Admin Dashboard
             </h1>
@@ -227,9 +222,10 @@ export default function AdminDashboard() {
                       <TableHead>Name</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Tickets</TableHead>
+                      <TableHead>Raffle Numbers</TableHead>
                       <TableHead>Screenshot</TableHead>
                       <TableHead>Verify</TableHead>
-                      <TableHead>Raffle #</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
@@ -243,6 +239,29 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{registration.phone}</TableCell>
                         <TableCell>{registration.email}</TableCell>
+                        <TableCell className="text-center">
+                          {registration.ticket_count || 1}
+                        </TableCell>
+                        <TableCell>
+                          {registration.raffle_numbers ? (
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {registration.raffle_numbers
+                                .split(", ")
+                                .filter(Boolean)
+                                .map((num, i) => (
+                                  <Badge
+                                    key={i}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {num}
+                                  </Badge>
+                                ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">Not assigned</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {registration.payment_screenshot_url && (
                             <Button
@@ -256,7 +275,6 @@ export default function AdminDashboard() {
                             </Button>
                           )}
                         </TableCell>
-                        {/* Checkbox for verification */}
                         <TableCell>
                           <Checkbox
                             checked={registration.status === "verified"}
@@ -264,15 +282,6 @@ export default function AdminDashboard() {
                             onCheckedChange={(checked) => {
                               if (checked) handleVerify(registration);
                             }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="text"
-                            placeholder="#000"
-                            value={registration.raffle_number || ""}
-                            readOnly
-                            className="w-20"
                           />
                         </TableCell>
                         <TableCell>
@@ -299,7 +308,7 @@ export default function AdminDashboard() {
                             size="sm"
                             onClick={() => copyWhatsAppMessage(registration)}
                             disabled={
-                              !registration.raffle_number ||
+                              !registration.raffle_numbers ||
                               registration.status !== "verified"
                             }
                           >
@@ -344,7 +353,6 @@ export default function AdminDashboard() {
                 className="max-w-full max-h-96 mb-4 rounded"
                 style={{ objectFit: "contain" }}
               />
-
               <Button onClick={closeImage} className="w-full">
                 Close
               </Button>
