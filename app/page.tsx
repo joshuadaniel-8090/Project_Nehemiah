@@ -149,17 +149,15 @@ export default function RegistrationPage() {
         return;
       }
 
-      // Generate raffle numbers
-      const raffleNumbers = generateRaffleNumbers(formData.ticketCount);
-
-      // Save registration
+      // Save registration WITHOUT raffle numbers
       const { error } = await supabase.from("registrations").insert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
         payment_screenshot_url: screenshotUrl,
         ticket_count: formData.ticketCount,
-        raffle_numbers: raffleNumbers,
+        raffle_numbers: null, // No numbers assigned yet
+        status: "pending", // Add status field
         created_at: new Date().toISOString(),
       });
 

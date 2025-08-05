@@ -72,36 +72,54 @@ export default function AdminDashboard() {
   const handleVerify = async (registration: Registration) => {
     if (registration.status === "verified") return;
 
-    // Generate multiple raffle numbers based on ticket count
-    const generateRaffleNumbers = (count: number) => {
-      const numbers = [];
-      for (let i = 0; i < count; i++) {
-        const num = Math.floor(Math.random() * 250) + 1;
-        numbers.push(`#${num.toString().padStart(3, "0")}`);
+    try {
+      // 1. Get the highest existing raffle number
+      const { data: maxNumberData, error: maxError } = await supabase
+        .from("registrations")
+        .select("raffle_numbers")
+        .not("raffle_numbers", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (maxError) throw maxError;
+
+      // 2. Determine starting number
+      let nextNumber = 1;
+      if (maxNumberData && maxNumberData.length > 0) {
+        const lastNumbers = maxNumberData[0].raffle_numbers;
+        const lastNumber = parseInt(lastNumbers.split("#").pop() || "0");
+        nextNumber = Math.min(lastNumber + 1, 250);
       }
-      return numbers.join(", ");
-    };
 
-    const raffleNumbers = generateRaffleNumbers(registration.ticket_count || 1);
+      // 3. Generate sequential numbers
+      const numbers = [];
+      for (let i = 0; i < registration.ticket_count; i++) {
+        if (nextNumber > 250) {
+          toast.error("Reached maximum raffle numbers (250)");
+          return;
+        }
+        numbers.push(`#${nextNumber.toString().padStart(3, "0")}`);
+        nextNumber++;
+      }
 
-    const { error } = await supabase
-      .from("registrations")
-      .update({
-        status: "verified",
-        raffle_numbers: raffleNumbers,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", registration.id);
+      // 4. Update registration
+      const { error } = await supabase
+        .from("registrations")
+        .update({
+          status: "verified",
+          raffle_numbers: numbers.join(", "),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", registration.id);
 
-    if (error) {
+      if (error) throw error;
+
+      toast.success(`Assigned numbers: ${numbers.join(", ")}`);
+      fetchRegistrations();
+    } catch (error) {
+      console.error("Verification error:", error);
       toast.error("Failed to verify registration");
-      return;
     }
-
-    toast.success(
-      `Verified and assigned ${registration.ticket_count || 1} raffle numbers!`
-    );
-    fetchRegistrations();
   };
 
   const copyWhatsAppMessage = (registration: Registration) => {
