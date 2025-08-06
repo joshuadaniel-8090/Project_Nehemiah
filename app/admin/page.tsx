@@ -26,12 +26,12 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [searchRaffleNumber, setSearchRaffleNumber] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "status">("date");
 
   // Simple password protection
   const ADMIN_PASSWORD = "admin123";
-
-  const [sortBy, setSortBy] = useState<"date" | "status">("date");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -56,9 +56,8 @@ export default function AdminDashboard() {
       if (sortBy === "date") {
         query = query.order("created_at", { ascending: false });
       } else {
-        // Sort by status (pending first), then by date
         query = query
-          .order("status", { ascending: true }) // "pending" comes before "verified"
+          .order("status", { ascending: true })
           .order("created_at", { ascending: false });
       }
 
@@ -163,9 +162,35 @@ export default function AdminDashboard() {
     setPreviewUrl(null);
   };
 
-  const filteredRegistrations = registrations.filter((r) =>
-    r.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRegistrations = registrations.filter((registration) => {
+    // Filter by name
+    const nameMatch = searchName
+      ? registration.name.toLowerCase().includes(searchName.toLowerCase())
+      : true;
+
+    // Filter by raffle number
+    let raffleMatch = true;
+    if (searchRaffleNumber) {
+      if (!registration.raffle_numbers) {
+        raffleMatch = false;
+      } else {
+        // Remove # and leading zeros for more flexible searching
+        const cleanSearch = searchRaffleNumber
+          .replace(/#/g, "")
+          .replace(/^0+/, "");
+
+        const cleanRaffleNumbers = registration.raffle_numbers
+          .split(", ")
+          .map((num) => num.replace(/#/g, "").replace(/^0+/, ""));
+
+        raffleMatch = cleanRaffleNumbers.some((num) =>
+          num.includes(cleanSearch)
+        );
+      }
+    }
+
+    return nameMatch && raffleMatch;
+  });
 
   const ticketSold = filteredRegistrations.reduce(
     (acc, r) => acc + (r.ticket_count || 0),
@@ -220,8 +245,16 @@ export default function AdminDashboard() {
             <Input
               type="text"
               placeholder="Search by name"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="w-64"
+            />
+
+            <Input
+              type="text"
+              placeholder="Search by raffle number (e.g., #001)"
+              value={searchRaffleNumber}
+              onChange={(e) => setSearchRaffleNumber(e.target.value)}
               className="w-64"
             />
 
@@ -238,9 +271,9 @@ export default function AdminDashboard() {
         <div className="flex">
           <div className="my-4 flex items-center">
             <Button
-              variant={sortBy === "date" ? "default" : "outline"}
+              variant={sortBy === "status" ? "default" : "outline"}
               onClick={() => {
-                setSortBy("date");
+                setSortBy("status");
                 fetchRegistrations();
               }}
             >

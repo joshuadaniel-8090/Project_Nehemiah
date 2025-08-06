@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,31 @@ export default function RegistrationPage() {
     paymentScreenshot: null,
     ticketCount: 1,
   });
+  const [ticketsRemaining, setTicketsRemaining] = useState(250);
   const TICKET_PRICE = 20;
+
+  // Fetch remaining tickets on component mount
+  useEffect(() => {
+    fetchRemainingTickets();
+  }, []);
+
+  const fetchRemainingTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("ticket_count");
+
+      if (error) throw error;
+
+      const totalSold = data.reduce(
+        (sum, reg) => sum + (reg.ticket_count || 0),
+        0
+      );
+      setTicketsRemaining(Math.max(0, 250 - totalSold));
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+    }
+  };
 
   const handleInputChange = (field: keyof FormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -69,6 +93,11 @@ export default function RegistrationPage() {
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(formData.phone.replace(/\D/g, ""))) {
       toast.error("Please enter a valid 10-digit phone number");
+      return false;
+    }
+
+    if (formData.ticketCount > ticketsRemaining) {
+      toast.error(`Only ${ticketsRemaining} tickets remaining!`);
       return false;
     }
 
@@ -122,16 +151,6 @@ export default function RegistrationPage() {
     }
   };
 
-  // Generate multiple raffle numbers
-  const generateRaffleNumbers = (count: number) => {
-    const numbers = [];
-    for (let i = 0; i < count; i++) {
-      const num = Math.floor(Math.random() * 250) + 1;
-      numbers.push(`#${num.toString().padStart(3, "0")}`);
-    }
-    return numbers.join(", ");
-  };
-
   const handleSubmit = async () => {
     if (!formData.paymentScreenshot) {
       toast.error("Please upload a payment screenshot");
@@ -141,7 +160,6 @@ export default function RegistrationPage() {
     setIsLoading(true);
 
     try {
-      // Upload screenshot
       const screenshotUrl = await uploadScreenshot(formData.paymentScreenshot);
 
       if (!screenshotUrl) {
@@ -150,15 +168,13 @@ export default function RegistrationPage() {
         return;
       }
 
-      // Save registration WITHOUT raffle numbers
       const { error } = await supabase.from("registrations").insert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
         payment_screenshot_url: screenshotUrl,
         ticket_count: formData.ticketCount,
-        raffle_numbers: null, // No numbers assigned yet
-        status: "pending", // Add status field
+        status: "pending",
         created_at: new Date().toISOString(),
       });
 
@@ -181,7 +197,7 @@ export default function RegistrationPage() {
 
   const openUPILink = () => {
     const amount = formData.ticketCount * TICKET_PRICE;
-    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&cu=INR&tn=Event Registration Payment of ${amount}`;
+    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment of ${amount}`;
     window.open(upiLink, "_blank");
   };
 
@@ -249,7 +265,11 @@ export default function RegistrationPage() {
                 <CardTitle className="text-2xl font-bold text-gray-900">
                   Event Registration
                 </CardTitle>
-                <p className="text-gray-600">Enter your details to continue</p>
+                <p className="text-gray-600">
+                  {ticketsRemaining > 0
+                    ? `${ticketsRemaining} tickets remaining`
+                    : "All tickets sold out!"}
+                </p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -295,46 +315,75 @@ export default function RegistrationPage() {
                       id="ticketCount"
                       type="number"
                       min={1}
-                      max={10}
+                      max={Math.min(10, ticketsRemaining)}
                       value={formData.ticketCount}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "ticketCount",
-                          Math.max(1, Math.min(10, Number(e.target.value)))
-                        )
-                      }
+                      onChange={(e) => {
+                        const value = Math.max(
+                          1,
+                          Math.min(
+                            Math.min(10, ticketsRemaining),
+                            Number(e.target.value) || 1
+                          )
+                        );
+                        handleInputChange("ticketCount", value);
+                      }}
                       className="w-full h-12 mx-2"
                     />
                     <Button
-                      onClick={() =>
-                        handleInputChange(
-                          "ticketCount",
-                          Math.max(1, formData.ticketCount - 1)
-                        )
-                      }
+                      onClick={() => {
+                        if (formData.ticketCount > 1) {
+                          handleInputChange(
+                            "ticketCount",
+                            formData.ticketCount - 1
+                          );
+                        }
+                      }}
                       className="h-12 mr-4 w-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300"
+                      disabled={formData.ticketCount <= 1}
                     >
                       <Minus className="h-5 w-5" />
                     </Button>
 
                     <Button
-                      onClick={() =>
-                        handleInputChange(
-                          "ticketCount",
-                          Math.min(10, formData.ticketCount + 1)
-                        )
-                      }
+                      onClick={() => {
+                        if (
+                          formData.ticketCount < Math.min(10, ticketsRemaining)
+                        ) {
+                          handleInputChange(
+                            "ticketCount",
+                            formData.ticketCount + 1
+                          );
+                        } else {
+                          toast.info(
+                            ticketsRemaining <= 0
+                              ? "All tickets are sold out"
+                              : `Only ${ticketsRemaining} tickets remaining`
+                          );
+                        }
+                      }}
                       className="h-12 px-4 w-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300"
+                      disabled={
+                        formData.ticketCount >= Math.min(10, ticketsRemaining)
+                      }
                     >
                       <Plus className="h-5 w-5" />
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    You can buy up to 10 tickets at once.
+                    {ticketsRemaining > 0
+                      ? `You can buy up to ${Math.min(
+                          10,
+                          ticketsRemaining
+                        )} tickets at once.`
+                      : "All tickets have been sold."}
                   </p>
                 </div>
 
-                <Button onClick={handleNext} className="w-full h-12 text-lg">
+                <Button
+                  onClick={handleNext}
+                  className="w-full h-12 text-lg"
+                  disabled={ticketsRemaining <= 0}
+                >
                   Next
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
@@ -409,7 +458,6 @@ export default function RegistrationPage() {
                   >
                     <Camera className="w-12 h-12 text-gray-400" />
                   </Button>
-                  {/* <Upload className="h-12 w-12 text-gray-400" /> */}
                 </div>
                 {formData.paymentScreenshot && (
                   <p className="text-sm text-green-600 mt-2">
