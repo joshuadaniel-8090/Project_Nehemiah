@@ -247,30 +247,7 @@ export default function AdminDashboard() {
               Sort by Status
             </Button>
           </div>
-          {/* <Card className="flex justify-end ml[37em] w-[15rem] h-20">
-            <CardHeader>
-              <CardTitle className="text-base text-center">
-                Total Tickets Sold
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col mt-6">
-              <p className="text-base font-bold items-center justify-center text-center">
-                {ticketSold}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="flex ml-[0rem] w-[1r7em] h-20">
-            <CardHeader>
-              <CardTitle className="text-base text-center">
-                Total Tickets Remaining
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col mt-6">
-              <p className="text-base font-bold items-center justify-center text-center">
-                {ticketRemaining}
-              </p>
-            </CardContent>
-          </Card> */}
+
           <div className="flex justify-end items-center space-x-4 ml-auto">
             <Button>Total Raffle Ticket Sold - {ticketSold}</Button>
             <Button>Total Raffle Ticket Remaining - {ticketRemaining}</Button>

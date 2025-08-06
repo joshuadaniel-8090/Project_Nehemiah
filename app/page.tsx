@@ -180,7 +180,7 @@ export default function RegistrationPage() {
 
   const openUPILink = () => {
     const amount = formData.ticketCount * TICKET_PRICE;
-    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment of ${amount}`;
+    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&cu=INR&tn=Event Registration Payment of ${amount}`;
     window.open(upiLink, "_blank");
   };
 
