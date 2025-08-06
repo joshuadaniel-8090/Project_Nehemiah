@@ -31,6 +31,8 @@ export default function AdminDashboard() {
   // Simple password protection
   const ADMIN_PASSWORD = "admin123";
 
+  const [sortBy, setSortBy] = useState<"date" | "status">("date");
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchRegistrations();
@@ -49,10 +51,18 @@ export default function AdminDashboard() {
   const fetchRegistrations = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("registrations")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let query = supabase.from("registrations").select("*");
+
+      if (sortBy === "date") {
+        query = query.order("created_at", { ascending: false });
+      } else {
+        // Sort by status (pending first), then by date
+        query = query
+          .order("status", { ascending: true }) // "pending" comes before "verified"
+          .order("created_at", { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Fetch error:", error);
@@ -157,6 +167,12 @@ export default function AdminDashboard() {
     r.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const ticketSold = filteredRegistrations.reduce(
+    (acc, r) => acc + (r.ticket_count || 0),
+    0
+  );
+  const ticketRemaining = 250 - ticketSold;
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -184,7 +200,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="minh-screen md:mx-auto bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -199,6 +215,8 @@ export default function AdminDashboard() {
             <p className="text-gray-600">Manage event registrations</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Search className="w-5 h-5 text-gray-400" />
+
             <Input
               type="text"
               placeholder="Search by name"
@@ -206,7 +224,7 @@ export default function AdminDashboard() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64"
             />
-            <Search className="w-5 h-5 text-gray-400" />
+
             <Button onClick={fetchRegistrations} disabled={isLoading}>
               <RefreshCw
                 className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
@@ -216,168 +234,206 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Registrations ({filteredRegistrations.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">
-                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <p className="text-gray-600">Loading registrations...</p>
-              </div>
-            ) : filteredRegistrations.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">No registrations found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Tickets</TableHead>
-                      <TableHead>Raffle Numbers</TableHead>
-                      <TableHead>Screenshot</TableHead>
-                      <TableHead>Verify</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRegistrations.map((registration) => (
-                      <TableRow key={registration.id}>
-                        <TableCell className="font-medium">
-                          {registration.name}
-                        </TableCell>
-                        <TableCell>{registration.phone}</TableCell>
-                        <TableCell>{registration.email}</TableCell>
-                        <TableCell className="text-center">
-                          {registration.ticket_count || 1}
-                        </TableCell>
-                        <TableCell>
-                          {registration.raffle_numbers ? (
-                            <div className="flex flex-wrap gap-1 max-w-xs">
-                              {registration.raffle_numbers
-                                .split(", ")
-                                .filter(Boolean)
-                                .map((num, i) => (
-                                  <Badge
-                                    key={i}
-                                    variant="outline"
-                                    className="text-xs"
-                                  >
-                                    {num}
-                                  </Badge>
-                                ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">Not assigned</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {registration.payment_screenshot_url && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                openImage(registration.payment_screenshot_url!)
-                              }
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Checkbox
-                            checked={registration.status === "verified"}
-                            disabled={registration.status === "verified"}
-                            onCheckedChange={(checked) => {
-                              if (checked) handleVerify(registration);
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              registration.status === "verified"
-                                ? "default"
-                                : registration.status === "rejected"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                          >
-                            {registration.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(
-                            registration.created_at
-                          ).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyWhatsAppMessage(registration)}
-                            disabled={
-                              !registration.raffle_numbers ||
-                              registration.status !== "verified"
-                            }
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="ml-2"
-                            onClick={() => openWhatsAppChat(registration)}
-                            disabled={!registration.phone}
-                            aria-label="Open WhatsApp"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Image Preview Modal */}
-        {previewUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-4 shadow-lg max-w-xs w-full flex flex-col items-center relative">
-              <Button
-                onClick={closeImage}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-              <Image
-                src={previewUrl || ""}
-                alt="Payment Screenshot"
-                width={384}
-                height={384}
-                className="max-w-full max-h-96 mb-4 rounded"
-                style={{ objectFit: "contain" }}
-              />
-              <Button onClick={closeImage} className="w-full">
-                Close
-              </Button>
-            </div>
+        {/* Sorting Buttons */}
+        <div className="flex">
+          <div className="my-4 flex items-center">
+            <Button
+              variant={sortBy === "date" ? "default" : "outline"}
+              onClick={() => {
+                setSortBy("date");
+                fetchRegistrations();
+              }}
+            >
+              Sort by Status
+            </Button>
           </div>
-        )}
+          {/* <Card className="flex justify-end ml[37em] w-[15rem] h-20">
+            <CardHeader>
+              <CardTitle className="text-base text-center">
+                Total Tickets Sold
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col mt-6">
+              <p className="text-base font-bold items-center justify-center text-center">
+                {ticketSold}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="flex ml-[0rem] w-[1r7em] h-20">
+            <CardHeader>
+              <CardTitle className="text-base text-center">
+                Total Tickets Remaining
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col mt-6">
+              <p className="text-base font-bold items-center justify-center text-center">
+                {ticketRemaining}
+              </p>
+            </CardContent>
+          </Card> */}
+          <div className="flex justify-end items-center space-x-4 ml-auto">
+            <Button>Total Raffle Ticket Sold - {ticketSold}</Button>
+            <Button>Total Raffle Ticket Remaining - {ticketRemaining}</Button>
+          </div>
+        </div>
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Registrations ({filteredRegistrations.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+              <p className="text-gray-600">Loading registrations...</p>
+            </div>
+          ) : filteredRegistrations.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No registrations found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Tickets</TableHead>
+                    <TableHead>Raffle Numbers</TableHead>
+                    <TableHead>Screenshot</TableHead>
+                    <TableHead>Verify</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRegistrations.map((registration) => (
+                    <TableRow key={registration.id}>
+                      <TableCell className="font-medium">
+                        {registration.name}
+                      </TableCell>
+                      <TableCell>{registration.phone}</TableCell>
+                      <TableCell>{registration.email}</TableCell>
+                      <TableCell className="text-center">
+                        {registration.ticket_count || 1}
+                      </TableCell>
+                      <TableCell>
+                        {registration.raffle_numbers ? (
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {registration.raffle_numbers
+                              .split(", ")
+                              .filter(Boolean)
+                              .map((num, i) => (
+                                <Badge
+                                  key={i}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {num}
+                                </Badge>
+                              ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Not assigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {registration.payment_screenshot_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              openImage(registration.payment_screenshot_url!)
+                            }
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Checkbox
+                          checked={registration.status === "verified"}
+                          disabled={registration.status === "verified"}
+                          onCheckedChange={(checked) => {
+                            if (checked) handleVerify(registration);
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            registration.status === "verified"
+                              ? "default"
+                              : registration.status === "rejected"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {registration.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(registration.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyWhatsAppMessage(registration)}
+                          disabled={
+                            !registration.raffle_numbers ||
+                            registration.status !== "verified"
+                          }
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="ml-2"
+                          onClick={() => openWhatsAppChat(registration)}
+                          disabled={!registration.phone}
+                          aria-label="Open WhatsApp"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Image Preview Modal */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-4 shadow-lg max-w-xs w-full flex flex-col items-center relative">
+            <Button
+              onClick={closeImage}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+            <Image
+              src={previewUrl || ""}
+              alt="Payment Screenshot"
+              width={384}
+              height={384}
+              className="max-w-full max-h-96 mb-4 rounded"
+              style={{ objectFit: "contain" }}
+            />
+            <Button onClick={closeImage} className="w-full">
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
