@@ -464,6 +464,22 @@ export default function RegistrationPage() {
                     ✓ {formData.paymentScreenshot.name}
                   </p>
                 )}
+                {formData.paymentScreenshot && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
+                      Preview your payment screenshot:
+                    </p>
+                    <div className="flex justify-center mt-2">
+                      <Image
+                        src={URL.createObjectURL(formData.paymentScreenshot)}
+                        width={200}
+                        height={200}
+                        alt="Payment Screenshot Preview"
+                        className="max-w-xs max-h-64 border rounded-lg shadow-md"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <Button
                   onClick={handleSubmit}
