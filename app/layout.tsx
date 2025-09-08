@@ -6,8 +6,9 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Event Registration System",
-  description: "Complete event registration with payment integration",
+  title: "Project Nehemiah",
+  description:
+    "Project Nehemiah — A crowdfunding initiative to build a church in a rural community, giving people a place to worship and grow closer to God.",
 };
 
 export default function RootLayout({

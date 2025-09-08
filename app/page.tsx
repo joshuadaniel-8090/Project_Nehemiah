@@ -1,503 +1,191 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChevronRight,
-  Upload,
-  CheckCircle,
-  ArrowLeft,
-  QrCode,
-  Camera,
-  Plus,
-  Minus,
-} from "lucide-react";
-import { toast } from "sonner";
+import { motion } from "framer-motion";
+import RegistrationForm from "@/components/RegistrationForm";
+import { MapPin, Calendar, Clock } from "lucide-react";
 import Image from "next/image";
-import QRCode from "react-qr-code";
-import { Analytics } from "@vercel/analytics/next";
 
-interface FormData {
-  name: string;
-  phone: string;
-  email: string;
-  paymentScreenshot: File | null;
-  ticketCount: number;
-}
-
-export default function RegistrationPage() {
-  const [showPaymentPage, setShowPaymentPage] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    phone: "",
-    email: "",
-    paymentScreenshot: null,
-    ticketCount: 1,
-  });
-  const [ticketsRemaining, setTicketsRemaining] = useState(250);
-  const TICKET_PRICE = 20;
-
-  // Fetch remaining tickets on component mount
-  useEffect(() => {
-    fetchRemainingTickets();
-  }, []);
-
-  const fetchRemainingTickets = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("registrations")
-        .select("ticket_count");
-
-      if (error) throw error;
-
-      const totalSold = data.reduce(
-        (sum, reg) => sum + (reg.ticket_count || 0),
-        0
-      );
-      setTicketsRemaining(Math.max(0, 250 - totalSold));
-    } catch (error) {
-      console.error("Error fetching tickets:", error);
-    }
-  };
-
-  const handleInputChange = (field: keyof FormData, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleFileChange = (file: File | null) => {
-    setFormData((prev) => ({ ...prev, paymentScreenshot: file }));
-  };
-
-  const validateStep1 = () => {
-    if (
-      !formData.name.trim() ||
-      !formData.phone.trim() ||
-      !formData.email.trim()
-    ) {
-      toast.error("Please fill in all required fields");
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast.error("Please enter a valid email address");
-      return false;
-    }
-
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(formData.phone.replace(/\D/g, ""))) {
-      toast.error("Please enter a valid 10-digit phone number");
-      return false;
-    }
-
-    if (formData.ticketCount > ticketsRemaining) {
-      toast.error(`Only ${ticketsRemaining} tickets remaining!`);
-      return false;
-    }
-
-    if (
-      typeof formData.ticketCount !== "number" ||
-      formData.ticketCount < 1 ||
-      formData.ticketCount > 10
-    ) {
-      toast.error("Please select between 1 and 10 tickets");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleNext = () => {
-    if (validateStep1()) {
-      setShowPaymentPage(true);
-    }
-  };
-
-  const handleBack = () => {
-    setShowPaymentPage(false);
-  };
-
-  const uploadScreenshot = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}.${fileExt}`;
-      const filePath = fileName;
-
-      const { error } = await supabase.storage
-        .from("payment-screenshots")
-        .upload(filePath, file);
-
-      if (error) {
-        console.error("Upload error:", error);
-        return null;
-      }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("payment-screenshots").getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error) {
-      console.error("Upload error:", error);
-      return null;
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.paymentScreenshot) {
-      toast.error("Please upload a payment screenshot");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const screenshotUrl = await uploadScreenshot(formData.paymentScreenshot);
-
-      if (!screenshotUrl) {
-        toast.error("Failed to upload screenshot. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.from("registrations").insert({
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        payment_screenshot_url: screenshotUrl,
-        ticket_count: formData.ticketCount,
-        status: "pending",
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        console.error("Registration error:", error);
-        toast.error("Failed to submit registration. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-
-      setIsSubmitted(true);
-      toast.success("Registration submitted successfully!");
-    } catch (error) {
-      console.error("Submit error:", error);
-      toast.error("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const openUPILink = () => {
-    const amount = formData.ticketCount * TICKET_PRICE;
-    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment of ${amount}`;
-    window.open(upiLink, "_blank");
-  };
-
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md mx-auto shadow-lg">
-          <CardContent className="text-center p-8">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Registration Received!
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Thank you for registering. You will receive an acknowledgment
-              through WhatsApp.
-            </p>
-            <Button onClick={() => window.location.reload()} className="w-full">
-              Register Another Person
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+export default function ProjectNehemiahLanding() {
   return (
-    <>
-      <Analytics />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md mx-auto">
-          {/* Progress Indicator */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center space-x-4">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  !showPaymentPage
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-600"
-                }`}
-              >
-                1
-              </div>
-              <div
-                className={`w-8 h-1 ${
-                  showPaymentPage ? "bg-blue-600" : "bg-gray-200"
-                }`}
-              />
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  showPaymentPage
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-600"
-                }`}
-              >
-                2
-              </div>
-            </div>
+    <div className="min-h-screen text-white relative overflow-hidden">
+      {/* Global Background */}
+      <Image
+        src="/file.svg"
+        alt="Church background"
+        width={1920}
+        height={1080}
+        
+        className="fixed inset-0 w-full h-full object-cover opacity-30 -z-10"
+      />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 -z-10"></div>
+
+      {/* Hero Section */}
+      <div className="h-screen flex items-center justify-center text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="px-6"
+        >
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="text-lg md:text-xl text-cyan-300 tracking-widest uppercase mb-4"
+          >
+            Faith • Hope • Unity
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-lg"
+          >
+            Project Nehemiah
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.9 }}
+            className="mt-6 text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed"
+          >
+            A divine mission to build a Christian church in a rural community —
+            bringing faith, hope, and God’s love to those who need it most.
+          </motion.p>
+        </motion.div>
+      </div>
+
+      {/* Event Details */}
+      <section className="max-w-5xl mx-auto px-6 py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col md:flex-row items-stretch justify-between 
+    bg-black/40 backdrop-blur-lg rounded-3xl shadow-xl p-10 border border-white/20"
+        >
+          {/* Location */}
+          <div className="flex-1 text-center">
+            <MapPin className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
+            <h3 className="text-2xl font-bold text-cyan-400">Location</h3>
+            <p className="mt-3 w-[21rem] text-gray-200 text-lg leading-relaxed">
+              St. Thomas Mount International Center, <br />
+              St. Thomas Mount Hill Top, <br />
+              Chennai
+            </p>
           </div>
 
-          {/* Form Container */}
-          {!showPaymentPage ? (
-            // Personal Details Page
-            <Card className="shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-2xl font-bold text-gray-900">
-                  Event Registration
-                </CardTitle>
-                <p className="text-gray-600">
-                  {ticketsRemaining > 0
-                    ? `${ticketsRemaining} tickets remaining`
-                    : "All tickets sold out!"}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="h-12"
-                  />
-                </div>
+          <div className="hidden md:flex items-center">
+            <div className="w-px h-20 bg-gradient-to-b from-cyan-400 via-white to-cyan-400 animate-pulse mx-6 rounded-full"></div>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className="h-12"
-                  />
-                </div>
+          {/* Date */}
+          <div className="flex-1 text-center">
+            <Calendar className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
+            <h3 className="text-2xl font-bold text-cyan-400">Date</h3>
+            <p className="mt-3 text-gray-200 text-lg leading-relaxed">
+              October 12, 2025
+            </p>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="h-12"
-                  />
-                </div>
+          <div className="hidden md:flex items-center">
+            <div className="w-px h-20 bg-gradient-to-b from-cyan-400 via-white to-cyan-400 animate-pulse mx-6 rounded-full"></div>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ticketCount">
-                    Number of Tickets * (Ticket Cost - ₹{TICKET_PRICE})
-                  </Label>
-                  <div className="flex items-center">
-                    <Input
-                      id="ticketCount"
-                      type="number"
-                      min={1}
-                      max={Math.min(10, ticketsRemaining)}
-                      value={formData.ticketCount}
-                      onChange={(e) => {
-                        const value = Math.max(
-                          1,
-                          Math.min(
-                            Math.min(10, ticketsRemaining),
-                            Number(e.target.value) || 1
-                          )
-                        );
-                        handleInputChange("ticketCount", value);
-                      }}
-                      className="w-full h-12 mx-2"
-                    />
-                    <Button
-                      onClick={() => {
-                        if (formData.ticketCount > 1) {
-                          handleInputChange(
-                            "ticketCount",
-                            formData.ticketCount - 1
-                          );
-                        }
-                      }}
-                      className="h-12 mr-4 w-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300"
-                      disabled={formData.ticketCount <= 1}
-                    >
-                      <Minus className="h-5 w-5" />
-                    </Button>
+          {/* Time */}
+          <div className="flex-1 text-center">
+            <Clock className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
+            <h3 className="text-2xl font-bold text-cyan-400">Time</h3>
+            <p className="mt-3 text-gray-200 text-lg leading-relaxed">
+              5:00 PM
+            </p>
+          </div>
+        </motion.div>
+      </section>
 
-                    <Button
-                      onClick={() => {
-                        if (
-                          formData.ticketCount < Math.min(10, ticketsRemaining)
-                        ) {
-                          handleInputChange(
-                            "ticketCount",
-                            formData.ticketCount + 1
-                          );
-                        } else {
-                          toast.info(
-                            ticketsRemaining <= 0
-                              ? "All tickets are sold out"
-                              : `Only ${ticketsRemaining} tickets remaining`
-                          );
-                        }
-                      }}
-                      className="h-12 px-4 w-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300"
-                      disabled={
-                        formData.ticketCount >= Math.min(10, ticketsRemaining)
-                      }
-                    >
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {ticketsRemaining > 0
-                      ? `You can buy up to ${Math.min(
-                          10,
-                          ticketsRemaining
-                        )} tickets at once.`
-                      : "All tickets have been sold."}
-                  </p>
-                </div>
+      {/* Why This Project Matters */}
+      <section className="py-24 px-6 flex justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="relative max-w-5xl w-full text-center rounded-3xl border border-white/20 
+          bg-black/40 backdrop-blur-lg shadow-2xl overflow-hidden p-12"
+        >
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-100 mb-6">
+            Why{" "}
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              Project Nehemiah
+            </span>
+            ?
+          </h2>
+          <div className="mx-auto w-24 h-1 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 rounded-full mb-8"></div>
 
-                <Button
-                  onClick={handleNext}
-                  className="flex items-center justify-center w-full h-12 text-lg"
-                  disabled={ticketsRemaining <= 0}
-                >
-                  <span className="mr-2">Proceeed to pay </span>
-                  <span className="text-lg">
-                    (₹{formData.ticketCount * TICKET_PRICE})
-                  </span>
-                  <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            // Payment Page
-            <Card className="shadow-lg">
-              <CardHeader className="text-center pb-4">
-                <Button
-                  variant="ghost"
-                  onClick={handleBack}
-                  className="absolute p-2"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <CardTitle className="text-2xl font-bold text-gray-900">
-                  Payment
-                </CardTitle>
-                <p className="text-gray-600">Complete your registration</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* QR Code Section */}
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Scan to Pay ₹{formData.ticketCount * TICKET_PRICE}
-                  </h3>
-                  <div className="w-32 h-32 mx-auto">
-                    <QRCode
-                      value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${
-                        formData.ticketCount * TICKET_PRICE
-                      }&cu=INR&tn=Event Registration Payment of ${
-                        formData.ticketCount * TICKET_PRICE
-                      }`}
-                      size={128}
-                    />
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Registration Fee: ₹{TICKET_PRICE} per ticket (Total: ₹
-                  {formData.ticketCount * TICKET_PRICE})
-                </p>
+          <p className="text-lg md:text-xl text-gray-200/90 leading-relaxed tracking-wide bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10 shadow-lg">
+            Many families in rural communities have no proper place to worship
+            God.{" "}
+            <span className="text-cyan-300 font-semibold">
+              Project Nehemiah is about more than building a church
+            </span>
+            ; it’s about building hope, unity, and faith. Together, we can
+            create a sacred place where generations will gather to know God and
+            grow closer to Him.
+          </p>
 
-                {/* UPI Link Button */}
-                <Button
-                  onClick={openUPILink}
-                  variant="outline"
-                  className="w-full h-12 text-green-600 border-green-600 hover:bg-green-50"
-                >
-                  Pay with UPI App
-                </Button>
-                {/* File Upload */}
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="screenshot"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      handleFileChange(e.target.files?.[0] || null)
-                    }
-                    className="h-12 w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <Button
-                    onClick={() => {
-                      const input = document.getElementById(
-                        "screenshot"
-                      ) as HTMLInputElement;
-                      input.capture = "environment";
-                      input.click();
-                    }}
-                    className="h-12 w-12 text-gray-400 bg-whit rounded-full"
-                  >
-                    <Camera className="w-12 h-12 text-gray-400" />
-                  </Button>
-                </div>
-                {formData.paymentScreenshot && (
-                  <p className="text-sm text-green-600 mt-2">
-                    ✓ {formData.paymentScreenshot.name}
-                  </p>
-                )}
-                {formData.paymentScreenshot && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600">
-                      Preview your payment screenshot:
-                    </p>
-                    <div className="flex justify-center mt-2">
-                      <Image
-                        src={URL.createObjectURL(formData.paymentScreenshot)}
-                        width={200}
-                        height={200}
-                        alt="Payment Screenshot Preview"
-                        className="max-w-xs max-h-64 border rounded-lg shadow-md"
-                      />
-                    </div>
-                  </div>
-                )}
+          <motion.blockquote
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6, duration: 1 }}
+            className="mt-10 italic text-gray-300 text-lg md:text-xl font-light"
+          >
+            “So we built the wall, and the entire wall was joined together up to
+            half its height, for the people had a mind to work.”{" "}
+            <span className="text-cyan-400 font-semibold">— Nehemiah 4:6</span>
+          </motion.blockquote>
+        </motion.div>
+      </section>
 
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !formData.paymentScreenshot}
-                  className="w-full h-12 text-lg"
-                >
-                  {isLoading ? "Submitting..." : "Complete Registration"}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    </>
+      {/* Call to Action */}
+      <section className="py-24 px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="max-w-3xl mx-auto bg-black/40 border border-white/20 backdrop-blur-lg px-10 py-14 rounded-3xl shadow-2xl"
+        >
+          <h2 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-6">
+            Join the Mission
+          </h2>
+
+          <p className="text-lg md:text-xl text-gray-200 leading-relaxed tracking-wide">
+            Be part of this{" "}
+            <span className="text-cyan-300 font-semibold">divine journey</span>.
+            Your support will help us establish a sacred place where none exists
+            — a church for prayer, worship, and peace, bringing hope to
+            generations yet to come.
+          </p>
+        </motion.div>
+      </section>
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="max-w-3xl mx-auto mb-32 px-6"
+      >
+        <RegistrationForm />
+      </motion.section>
+      {/* Footer */}
+      <footer className="bg-black/80 py-6 text-center text-sm text-gray-500">
+        Project Nehemiah © 2025. Location: St. Thomas Mount, Chennai. Event
+        Date: Oct 12, 2025, 5 PM.
+      </footer>
+    </div>
   );
 }
