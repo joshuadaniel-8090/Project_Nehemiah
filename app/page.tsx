@@ -309,7 +309,9 @@ export default function RegistrationPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ticketCount">Number of Tickets *</Label>
+                  <Label htmlFor="ticketCount">
+                    Number of Tickets * (Ticket Cost - ₹{TICKET_PRICE})
+                  </Label>
                   <div className="flex items-center">
                     <Input
                       id="ticketCount"
@@ -381,10 +383,13 @@ export default function RegistrationPage() {
 
                 <Button
                   onClick={handleNext}
-                  className="w-full h-12 text-lg"
+                  className="flex items-center justify-center w-full h-12 text-lg"
                   disabled={ticketsRemaining <= 0}
                 >
-                  Next
+                  <span className="mr-2">Proceeed to pay </span>
+                  <span className="text-lg">
+                    (₹{formData.ticketCount * TICKET_PRICE})
+                  </span>
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </CardContent>
