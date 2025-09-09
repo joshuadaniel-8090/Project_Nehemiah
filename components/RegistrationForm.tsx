@@ -146,8 +146,15 @@ export default function RegistrationForm() {
 
   const openUPILink = () => {
     const amount = formData.ticketCount * TICKET_PRICE;
-    const upiLink = `upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${amount}&cu=INR&tn=Event Registration Payment of ${amount}`;
-    window.open(upiLink, "_blank");
+
+    const upiLink =
+      `upi://pay?pa=jjoshuadaniel1234@oksbi` +
+      `&pn=${encodeURIComponent("Event Registration")}` +
+      `&am=${amount}` +
+      `&cu=INR` +
+      `&tn=${encodeURIComponent(`Event+Registration+Payment+of+₹${amount}`)}`;
+
+    window.location.href = upiLink; // more reliable than window.open for deep links
   };
 
   if (isSubmitted) {
@@ -177,6 +184,7 @@ export default function RegistrationForm() {
       </motion.div>
     );
   }
+  const amount = formData.ticketCount * TICKET_PRICE;
 
   return (
     <motion.div
@@ -317,16 +325,12 @@ export default function RegistrationForm() {
             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-lg">
               <h3 className="text-lg md:text-xl font-semibold mb-4 text-gray-200">
                 Scan to Pay
-                <span className="text-cyan-400">
-                  {" "}
-                  ₹{formData.ticketCount * TICKET_PRICE}
-                </span>
+                <span className="text-cyan-400"> ₹{amount}</span>
               </h3>
+
               <div className="p-4 bg-white border border-white rounded-xl">
                 <QRCode
-                  value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event Registration&am=${
-                    formData.ticketCount * TICKET_PRICE
-                  }&cu=INR`}
+                  value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event+Registration&am=${amount}&cu=INR&tn=Event+Registration+-+${amount}+INR`}
                   size={160}
                 />
               </div>

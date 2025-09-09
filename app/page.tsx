@@ -14,7 +14,6 @@ export default function ProjectNehemiahLanding() {
         alt="Church background"
         width={1920}
         height={1080}
-        
         className="fixed inset-0 w-full h-full object-cover opacity-30 -z-10"
       />
       <div className="fixed inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 -z-10"></div>
@@ -58,7 +57,7 @@ export default function ProjectNehemiahLanding() {
       </div>
 
       {/* Event Details */}
-      <section className="max-w-5xl mx-auto px-6 py-20">
+      <section className="max-w-5xl mx-auto px-6 py-10">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -71,11 +70,21 @@ export default function ProjectNehemiahLanding() {
           <div className="flex-1 text-center">
             <MapPin className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
             <h3 className="text-2xl font-bold text-cyan-400">Location</h3>
-            <p className="mt-3 w-[21rem] text-gray-200 text-lg leading-relaxed">
+            <a
+              href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6"
+              // className="mt-3 lg:w-[21rem] text-center text-ray-200 text-lg leading-relaxed text-cyan-100 underline"
+            >
+              <p className="mt-3 lg:w-[21rem] text-center text-gray-200 text-lg leading-relaxed underline">
+                St. Thomas Mount International Center, <br />
+                St. Thomas Mount Hill Top, <br />
+                Chennai
+              </p>
+            </a>
+            {/* <p className="mt-3 lg:w-[21rem] text-center text-gray-200 text-lg leading-relaxed">
               St. Thomas Mount International Center, <br />
               St. Thomas Mount Hill Top, <br />
               Chennai
-            </p>
+            </p> */}
           </div>
 
           <div className="hidden md:flex items-center">
@@ -107,7 +116,7 @@ export default function ProjectNehemiahLanding() {
       </section>
 
       {/* Why This Project Matters */}
-      <section className="py-24 px-6 flex justify-center">
+      <section className="py-10 px-6 flex justify-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -151,7 +160,7 @@ export default function ProjectNehemiahLanding() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-24 px-6 text-center">
+      <section className="py-10 px-6 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
