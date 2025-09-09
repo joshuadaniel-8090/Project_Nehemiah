@@ -2,10 +2,17 @@
 
 import { motion } from "framer-motion";
 import RegistrationForm from "@/components/RegistrationForm";
-import { MapPin, Calendar, Clock } from "lucide-react";
+import { MapPin, Calendar, Clock, ChevronsDown } from "lucide-react";
 import Image from "next/image";
+import { useRef } from "react";
 
 export default function ProjectNehemiahLanding() {
+  const detailsRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToDetails = () => {
+    detailsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen text-white relative overflow-hidden">
       {/* Global Background */}
@@ -54,7 +61,59 @@ export default function ProjectNehemiahLanding() {
             bringing faith, hope, and God’s love to those who need it most.
           </motion.p>
         </motion.div>
+        <motion.button
+          onClick={scrollToDetails}
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          className="absolute lg:top-[65rem] top-[45rem] text-cyan-400 hover:text-cyan-300"
+        >
+          <ChevronsDown className="w-10 h-10" />
+        </motion.button>
       </div>
+
+      {/* Why This Project Matters */}
+      <section ref={detailsRef} className="py-10 px-6 flex justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="relative max-w-5xl w-full text-center rounded-3xl border border-white/20 
+          bg-black/40 backdrop-blur-lg shadow-2xl overflow-hidden p-12"
+        >
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-100 mb-6">
+            Why{" "}
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              Project Nehemiah
+            </span>
+            ?
+          </h2>
+          <div className="mx-auto w-24 h-1 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 rounded-full mb-8"></div>
+
+          <p className="text-lg md:text-xl text-gray-200/90 leading-relaxed tracking-wide bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10 shadow-lg">
+            Many families in rural communities have no proper place to worship
+            God.{" "}
+            <span className="text-cyan-300 font-semibold">
+              Project Nehemiah is about more than building a church
+            </span>
+            ; it’s about building hope, unity, and faith. Together, we can
+            create a sacred place where generations will gather to know God and
+            grow closer to Him.
+          </p>
+
+          <motion.blockquote
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6, duration: 1 }}
+            className="mt-10 italic text-gray-300 text-lg md:text-xl font-light"
+          >
+            “So we built the wall, and the entire wall was joined together up to
+            half its height, for the people had a mind to work.”{" "}
+            <span className="text-cyan-400 font-semibold">— Nehemiah 4:6</span>
+          </motion.blockquote>
+        </motion.div>
+      </section>
 
       {/* Event Details */}
       <section className="max-w-5xl mx-auto px-6 py-10">
@@ -109,53 +168,9 @@ export default function ProjectNehemiahLanding() {
             <Clock className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
             <h3 className="text-2xl font-bold text-cyan-400">Time</h3>
             <p className="mt-3 text-gray-200 text-lg leading-relaxed">
-              5:00 PM
+              6:00 PM
             </p>
           </div>
-        </motion.div>
-      </section>
-
-      {/* Why This Project Matters */}
-      <section className="py-10 px-6 flex justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="relative max-w-5xl w-full text-center rounded-3xl border border-white/20 
-          bg-black/40 backdrop-blur-lg shadow-2xl overflow-hidden p-12"
-        >
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-100 mb-6">
-            Why{" "}
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
-              Project Nehemiah
-            </span>
-            ?
-          </h2>
-          <div className="mx-auto w-24 h-1 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 rounded-full mb-8"></div>
-
-          <p className="text-lg md:text-xl text-gray-200/90 leading-relaxed tracking-wide bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10 shadow-lg">
-            Many families in rural communities have no proper place to worship
-            God.{" "}
-            <span className="text-cyan-300 font-semibold">
-              Project Nehemiah is about more than building a church
-            </span>
-            ; it’s about building hope, unity, and faith. Together, we can
-            create a sacred place where generations will gather to know God and
-            grow closer to Him.
-          </p>
-
-          <motion.blockquote
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.6, duration: 1 }}
-            className="mt-10 italic text-gray-300 text-lg md:text-xl font-light"
-          >
-            “So we built the wall, and the entire wall was joined together up to
-            half its height, for the people had a mind to work.”{" "}
-            <span className="text-cyan-400 font-semibold">— Nehemiah 4:6</span>
-          </motion.blockquote>
         </motion.div>
       </section>
 
@@ -193,7 +208,7 @@ export default function ProjectNehemiahLanding() {
       {/* Footer */}
       <footer className="bg-black/80 py-6 text-center text-sm text-gray-500">
         Project Nehemiah © 2025. Location: St. Thomas Mount, Chennai. Event
-        Date: Oct 12, 2025, 5 PM.
+        Date: Oct 12, 2025, 6 PM.
       </footer>
     </div>
   );
