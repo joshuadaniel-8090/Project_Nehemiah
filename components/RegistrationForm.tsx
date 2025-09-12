@@ -150,8 +150,6 @@ export default function RegistrationForm() {
     const upiLink =
       `upi://pay?pa=jjoshuadaniel1234@oksbi` +
       `&pn=${encodeURIComponent("Event Registration")}` +
-      `&am=${amount}` +
-      `&cu=INR` +
       `&tn=${encodeURIComponent(`Event+Registration+Payment+of+₹${amount}`)}`;
 
     window.location.href = upiLink; // more reliable than window.open for deep links
