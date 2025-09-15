@@ -82,48 +82,47 @@ export default function AdminDashboard() {
     if (registration.status === "verified") return;
 
     try {
-      // 1. Get the highest existing raffle number
-      const { data: maxNumberData, error: maxError } = await supabase
+      // Step 1: Fetch the highest ticket number so far
+      const { data: lastTicket, error: lastError } = await supabase
         .from("registrations")
-        .select("raffle_numbers")
-        .not("raffle_numbers", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .select("raffle_numbers");
 
-      if (maxError) throw maxError;
+      if (lastError) throw lastError;
 
-      // 2. Determine starting number
-      let nextNumber = 1;
-      if (maxNumberData && maxNumberData.length > 0) {
-        const lastNumbers = maxNumberData[0].raffle_numbers;
-        const lastNumber = parseInt(lastNumbers.split("#").pop() || "0");
-        nextNumber = Math.min(lastNumber + 1, 250);
+      let lastNumber = 0;
+      if (lastTicket && lastTicket.length > 0) {
+        lastNumber = Math.max(
+          ...lastTicket.flatMap((row) => row.raffle_numbers || [0])
+        );
       }
 
-      // 3. Generate sequential numbers
-      const numbers = [];
-      for (let i = 0; i < registration.ticket_count; i++) {
-        if (nextNumber > 250) {
-          toast.error("Reached maximum raffle numbers (250)");
-          return;
-        }
-        numbers.push(`#${nextNumber.toString().padStart(3, "0")}`);
-        nextNumber++;
-      }
+      // Step 2: Generate new sequential numbers
+      const ticketCount = registration.ticket_count || 1;
+      const newTickets = Array.from(
+        { length: ticketCount },
+        (_, i) => lastNumber + i + 1
+      );
 
-      // 4. Update registration
-      const { error } = await supabase
+      // Step 3: Update registration
+      const { error: updateError } = await supabase
         .from("registrations")
         .update({
           status: "verified",
-          raffle_numbers: numbers.join(", "),
+          // ticket_numbers: newTickets, // store as array
+          raffle_numbers: newTickets
+            .map((n) => `${n.toString().padStart(3, "0")}`)
+            .join(", "),
           updated_at: new Date().toISOString(),
         })
         .eq("id", registration.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      toast.success(`Assigned numbers: ${numbers.join(", ")}`);
+      toast.success(
+        `Assigned raffle numbers: ${newTickets
+          .map((n) => `#${n.toString().padStart(3, "0")}`)
+          .join(", ")}`
+      );
       fetchRegistrations();
     } catch (error) {
       console.error("Verification error:", error);
@@ -139,7 +138,7 @@ export default function AdminDashboard() {
 
     const message = `Hey ${registration.name}, your registration for ${
       registration.ticket_count || 1
-    } ticket(s) is verified! 🎉 Your raffle numbers are: ${
+    } ticket(s) is verified! 🎉 Your raffle numbers: ${
       registration.raffle_numbers
     }. Thanks for participating!`;
 
@@ -154,35 +153,24 @@ export default function AdminDashboard() {
     window.open(`https://wa.me/91${phone}`, "_blank");
   };
 
-  const openImage = (url: string) => {
-    setPreviewUrl(url);
-  };
-
-  const closeImage = () => {
-    setPreviewUrl(null);
-  };
+  const openImage = (url: string) => setPreviewUrl(url);
+  const closeImage = () => setPreviewUrl(null);
 
   const filteredRegistrations = registrations.filter((registration) => {
-    // Filter by name
     const nameMatch = searchName
       ? registration.name.toLowerCase().includes(searchName.toLowerCase())
       : true;
 
-    // Filter by raffle number
     let raffleMatch = true;
     if (searchRaffleNumber) {
-      if (!registration.raffle_numbers) {
-        raffleMatch = false;
-      } else {
-        // Remove # and leading zeros for more flexible searching
+      if (!registration.raffle_numbers) raffleMatch = false;
+      else {
         const cleanSearch = searchRaffleNumber
           .replace(/#/g, "")
           .replace(/^0+/, "");
-
         const cleanRaffleNumbers = registration.raffle_numbers
           .split(", ")
           .map((num) => num.replace(/#/g, "").replace(/^0+/, ""));
-
         raffleMatch = cleanRaffleNumbers.some((num) =>
           num.includes(cleanSearch)
         );
@@ -241,7 +229,6 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center space-x-2">
             <Search className="w-5 h-5 text-gray-400" />
-
             <Input
               type="text"
               placeholder="Search by name"
@@ -249,7 +236,6 @@ export default function AdminDashboard() {
               onChange={(e) => setSearchName(e.target.value)}
               className="w-64"
             />
-
             <Input
               type="text"
               placeholder="Search by raffle number (e.g., #001)"
@@ -257,7 +243,6 @@ export default function AdminDashboard() {
               onChange={(e) => setSearchRaffleNumber(e.target.value)}
               className="w-64"
             />
-
             <Button onClick={fetchRegistrations} disabled={isLoading}>
               <RefreshCw
                 className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
@@ -287,6 +272,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Registrations ({filteredRegistrations.length})</CardTitle>
@@ -312,7 +298,7 @@ export default function AdminDashboard() {
                     <TableHead>Tickets</TableHead>
                     <TableHead>Raffle Numbers</TableHead>
                     <TableHead>Screenshot</TableHead>
-                    <TableHead>UPI Name</TableHead> {/* ✅ New column */}
+                    <TableHead>UPI Name</TableHead>
                     <TableHead>Verify</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
@@ -363,8 +349,6 @@ export default function AdminDashboard() {
                           </Button>
                         )}
                       </TableCell>
-
-                      {/* ✅ Show UPI Name here */}
                       <TableCell>
                         {registration.upi_name ? (
                           <span className="text-gray-800">
@@ -374,7 +358,6 @@ export default function AdminDashboard() {
                           <span className="text-gray-400">N/A</span>
                         )}
                       </TableCell>
-
                       <TableCell>
                         <Checkbox
                           checked={registration.status === "verified"}
@@ -432,7 +415,6 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Image Preview Modal */}
       {previewUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-4 shadow-lg max-w-xs w-full flex flex-col items-center relative">

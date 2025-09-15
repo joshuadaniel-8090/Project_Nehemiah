@@ -427,7 +427,10 @@ export default function RegistrationForm() {
                   </li>
                   <li>
                     Confirm and complete the payment of{" "}
-                    <span className="font-semibold text-cyan-400">₹{amount}</span>.
+                    <span className="font-semibold text-cyan-400">
+                      ₹{amount}
+                    </span>
+                    .
                   </li>
                 </ol>
               </div>
@@ -451,7 +454,7 @@ export default function RegistrationForm() {
                 htmlFor="upiName"
                 className="block text-gray-200 mb-2 font-medium"
               >
-                UPI Name
+                UPI Name <span className="text-cyan-400">*</span>
               </label>
               <Input
                 id="upiName"
