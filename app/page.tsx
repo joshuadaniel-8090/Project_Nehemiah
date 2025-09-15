@@ -219,8 +219,8 @@ export default function ProjectNehemiahLanding() {
       </motion.section>
       {/* Footer */}
       <footer className="bg-black/80 py-6 text-center text-sm text-gray-500">
-        Project Nehemiah © 2025. Location: St. Thomas Mount, Chennai. Event
-        Date: Oct 12, 2025, 6 PM.
+        Project Nehemiah. | Location: St. Thomas Mount, Chennai. | Event Date:
+        Oct 12, 2025, | 6 PM.
       </footer>
     </div>
   );
