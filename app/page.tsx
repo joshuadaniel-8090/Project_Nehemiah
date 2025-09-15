@@ -139,7 +139,10 @@ export default function ProjectNehemiahLanding() {
               St. Thomas Mount Hill Top, Chennai
             </p>
             <div className="my-3">
-              <a href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6" className="my-8">
+              <a
+                href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6"
+                className="my-8"
+              >
                 <Button className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-md px-4">
                   Open in Maps
                 </Button>
