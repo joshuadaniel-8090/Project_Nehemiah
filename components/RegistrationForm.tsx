@@ -35,6 +35,7 @@ export default function RegistrationForm() {
   const [showPaymentPage, setShowPaymentPage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     phone: "",
@@ -65,7 +66,6 @@ export default function RegistrationForm() {
     fetchRemainingTickets();
   }, []);
 
-  // Show alert when payment page is opened
   useEffect(() => {
     if (showPaymentPage) {
       setShowUPIAlert(true);
@@ -162,16 +162,7 @@ export default function RegistrationForm() {
     }
   };
 
-  const openUPILink = () => {
-    const amount = formData.ticketCount * TICKET_PRICE;
-
-    const upiLink =
-      `upi://pay?pa=jjoshuadaniel1234@oksbi` +
-      `&pn=${encodeURIComponent("Event Registration")}` +
-      `&tn=${encodeURIComponent(`Event Registration Payment of ₹${amount}`)}`;
-
-    window.location.href = upiLink;
-  };
+  const amount = formData.ticketCount * TICKET_PRICE;
 
   if (isSubmitted) {
     return (
@@ -208,15 +199,13 @@ export default function RegistrationForm() {
     );
   }
 
-  const amount = formData.ticketCount * TICKET_PRICE;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="w-full max-w-xl mx-auto space-y-8"
     >
-      {/* Modal Popup */}
+      {/* UPI Alert */}
       {showUPIAlert && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-black/90 border border-cyan-400 rounded-2xl p-6 max-w-sm text-center shadow-xl relative">
@@ -232,8 +221,8 @@ export default function RegistrationForm() {
             <p className="text-gray-200 mb-4">
               Please make sure to enter your{" "}
               <span className="text-cyan-300 font-semibold">UPI Name</span>{" "}
-              before submitting the form. This will help us verify your payment
-              quickly and without confusion.
+              before submitting the form. This helps us verify your payment
+              quickly.
             </p>
             <Button
               onClick={() => setShowUPIAlert(false)}
@@ -245,7 +234,47 @@ export default function RegistrationForm() {
         </div>
       )}
 
+      {/* Payment Confirmation Popup */}
+      {showConfirmPopup && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-black/90 border border-cyan-400 rounded-2xl p-6 max-w-sm text-center shadow-xl relative">
+            <button
+              onClick={() => setShowConfirmPopup(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-cyan-400 mb-3">
+              Confirm Your Payment
+            </h2>
+            <p className="text-gray-200 mb-4">
+              Did you complete the UPI payment of{" "}
+              <span className="text-cyan-300 font-semibold">₹{amount}</span>?
+            </p>
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => {
+                  setShowConfirmPopup(false);
+                  handleSubmit();
+                }}
+                className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
+              >
+                Yes, I Paid
+              </Button>
+              <Button
+                onClick={() => setShowConfirmPopup(false)}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-xl"
+              >
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Form */}
       {!showPaymentPage ? (
+        // Step 1: Registration Details
         <Card className="bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -360,6 +389,7 @@ export default function RegistrationForm() {
           </CardContent>
         </Card>
       ) : (
+        // Step 2: Payment Page
         <Card className="bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl">
           <CardHeader className="text-center pb-4 relative">
             <Button
@@ -388,14 +418,6 @@ export default function RegistrationForm() {
               </div>
             </div>
 
-            {/* <Button
-              onClick={openUPILink}
-              variant="outline"
-              className="w-full bg-black/40 text-cyan-400 hover:bg-cyan-600/20 rounded-xl"
-            >
-              Pay with UPI App
-            </Button> */}
-
             <div>
               <label
                 htmlFor="upiName"
@@ -413,41 +435,14 @@ export default function RegistrationForm() {
               />
             </div>
 
-            {/* <div className="w-full">
-              <label
-                htmlFor="paymentScreenshot"
-                className="w-full flex items-center justify-between px-4 py-3 bg-black/30 border border-white/20 rounded-xl cursor-pointer text-gray-100 hover:bg-black/40 transition"
-              >
-                {formData.paymentScreenshot
-                  ? formData.paymentScreenshot.name
-                  : "Choose file (payment screenshot)"}
-                <span className="text-cyan-400 font-semibold">Browse</span>
-              </label>
-              <input
-                id="paymentScreenshot"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
-                className="hidden"
-              />
-            </div>
-
-            {formData.paymentScreenshot && (
-              <div className="mt-4 flex justify-center">
-                <Image
-                  src={URL.createObjectURL(formData.paymentScreenshot)}
-                  width={200}
-                  height={200}
-                  alt="Preview"
-                  className="rounded-xl border border-white/20 shadow-lg"
-                />
-              </div>
-            )} */}
-
             <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
+              onClick={() => setShowConfirmPopup(true)}
+              disabled={isLoading || !formData.upiName.trim()}
+              className={`w-full text-white rounded-xl ${
+                isLoading || !formData.upiName.trim()
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-cyan-500 hover:bg-cyan-600"
+              }`}
             >
               {isLoading ? "Submitting..." : "Complete Registration"}
             </Button>
