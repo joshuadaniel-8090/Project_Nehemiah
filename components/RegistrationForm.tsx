@@ -220,7 +220,7 @@ export default function RegistrationForm() {
             </h2>
             <p className="text-gray-200 mb-4">
               Please make sure to enter your{" "}
-              <span className="text-cyan-300 font-semibold">UPI Name</span>{" "}
+              <span className="text-cyan-300 font-semibold">UPI Name/ID</span>{" "}
               before submitting the form. This helps us verify your payment
               quickly.
             </p>

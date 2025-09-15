@@ -58,9 +58,9 @@ export default function ProjectNehemiahLanding() {
             transition={{ duration: 1, delay: 0.9 }}
             className="mt-6 text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed"
           >
-            A divine mission to establish a Christian church by securing a
-            building in a rural community bringing faith, hope and God’s love to
-            those who need it most.
+            A divine mission to establish a church by securing a building in a
+            rural community bringing faith, hope and God’s love to those who
+            need it most.
           </motion.p>
         </motion.div>
         <motion.button

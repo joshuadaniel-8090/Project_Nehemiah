@@ -136,11 +136,11 @@ export default function AdminDashboard() {
       return;
     }
 
-    const message = `Hey ${registration.name}, your registration for ${
+    const message = `Hey *${registration.name}*, your registration for *${
       registration.ticket_count || 1
-    } ticket(s) is verified! 🎉 Your raffle numbers: ${
+    }* ticket(s) is verified! 🎉 Your raffle numbers: *${
       registration.raffle_numbers
-    }. Thanks for participating!`;
+    }*. Thanks for participating!`;
 
     navigator.clipboard
       .writeText(message)
@@ -317,9 +317,23 @@ export default function AdminDashboard() {
                         {registration.ticket_count || 1}
                       </TableCell>
                       <TableCell>
-                        {registration.raffle_numbers ? (
+                        {Array.isArray(registration.raffle_numbers) ? (
                           <div className="flex flex-wrap gap-1 max-w-xs">
-                            {registration.raffle_numbers
+                            {registration.raffle_numbers.map(
+                              (num: number, i: number) => (
+                                <Badge
+                                  key={i}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  #{num.toString().padStart(3, "0")}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        ) : registration.raffle_numbers ? (
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {(registration.raffle_numbers as string)
                               .split(", ")
                               .filter(Boolean)
                               .map((num, i) => (
@@ -336,6 +350,7 @@ export default function AdminDashboard() {
                           <span className="text-gray-400">Not assigned</span>
                         )}
                       </TableCell>
+
                       <TableCell>
                         {registration.payment_screenshot_url && (
                           <Button
