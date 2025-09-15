@@ -388,13 +388,13 @@ export default function RegistrationForm() {
               </div>
             </div>
 
-            <Button
+            {/* <Button
               onClick={openUPILink}
               variant="outline"
               className="w-full bg-black/40 text-cyan-400 hover:bg-cyan-600/20 rounded-xl"
             >
               Pay with UPI App
-            </Button>
+            </Button> */}
 
             <div>
               <label
