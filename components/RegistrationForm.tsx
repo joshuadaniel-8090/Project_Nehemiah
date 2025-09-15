@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Plus,
   Minus,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -24,6 +25,7 @@ interface FormData {
   email: string;
   paymentScreenshot: File | null;
   ticketCount: number;
+  upiName: string;
 }
 
 const MAX_TICKETS = 250;
@@ -38,9 +40,11 @@ export default function RegistrationForm() {
     phone: "",
     email: "",
     paymentScreenshot: null,
+    upiName: "",
     ticketCount: 1,
   });
   const [ticketsRemaining, setTicketsRemaining] = useState(MAX_TICKETS);
+  const [showUPIAlert, setShowUPIAlert] = useState(false);
 
   useEffect(() => {
     const fetchRemainingTickets = async () => {
@@ -60,6 +64,13 @@ export default function RegistrationForm() {
     };
     fetchRemainingTickets();
   }, []);
+
+  // Show alert when payment page is opened
+  useEffect(() => {
+    if (showPaymentPage) {
+      setShowUPIAlert(true);
+    }
+  }, [showPaymentPage]);
 
   const handleInputChange = (field: keyof FormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -113,20 +124,26 @@ export default function RegistrationForm() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.paymentScreenshot) {
-      toast.error("Please upload a payment screenshot");
+    if (!formData.upiName || formData.upiName.trim() === "") {
+      toast.error("Please enter your UPI name");
       return;
     }
+
     setIsLoading(true);
 
     try {
-      const screenshotUrl = await uploadScreenshot(formData.paymentScreenshot);
-      if (!screenshotUrl) throw new Error("Upload failed");
+      let screenshotUrl = null;
+
+      if (formData.paymentScreenshot) {
+        screenshotUrl = await uploadScreenshot(formData.paymentScreenshot);
+        if (!screenshotUrl) throw new Error("Screenshot upload failed");
+      }
 
       const { error } = await supabase.from("registrations").insert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email,
+        upi_name: formData.upiName,
         payment_screenshot_url: screenshotUrl,
         ticket_count: formData.ticketCount,
         status: "pending",
@@ -134,6 +151,7 @@ export default function RegistrationForm() {
       });
 
       if (error) throw error;
+
       setIsSubmitted(true);
       toast.success("Registration submitted successfully!");
     } catch (err) {
@@ -150,9 +168,9 @@ export default function RegistrationForm() {
     const upiLink =
       `upi://pay?pa=jjoshuadaniel1234@oksbi` +
       `&pn=${encodeURIComponent("Event Registration")}` +
-      `&tn=${encodeURIComponent(`Event+Registration+Payment+of+₹${amount}`)}`;
+      `&tn=${encodeURIComponent(`Event Registration Payment of ₹${amount}`)}`;
 
-    window.location.href = upiLink; // more reliable than window.open for deep links
+    window.location.href = upiLink;
   };
 
   if (isSubmitted) {
@@ -168,8 +186,15 @@ export default function RegistrationForm() {
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-100 mb-2">
               Registration Received!
             </h2>
-            <p className="text-gray-300 mb-6">
-              You’ll receive an acknowledgment through WhatsApp.
+            <p className="text-gray-300 mb-4">
+              Thank you for registering. Your details and payment have been
+              submitted successfully.
+            </p>
+            <p className="text-gray-400 mb-6 text-sm">
+              Please note: All registrations are carefully monitored by our
+              volunteer team. Your confirmation and raffle number will be sent
+              to you on WhatsApp once your payment is verified. This may take a
+              little time — we appreciate your patience.
             </p>
             <Button
               onClick={() => window.location.reload()}
@@ -182,6 +207,7 @@ export default function RegistrationForm() {
       </motion.div>
     );
   }
+
   const amount = formData.ticketCount * TICKET_PRICE;
 
   return (
@@ -190,6 +216,35 @@ export default function RegistrationForm() {
       animate={{ opacity: 1 }}
       className="w-full max-w-xl mx-auto space-y-8"
     >
+      {/* Modal Popup */}
+      {showUPIAlert && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-black/90 border border-cyan-400 rounded-2xl p-6 max-w-sm text-center shadow-xl relative">
+            <button
+              onClick={() => setShowUPIAlert(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-cyan-400 mb-3">
+              Important Note
+            </h2>
+            <p className="text-gray-200 mb-4">
+              Please make sure to enter your{" "}
+              <span className="text-cyan-300 font-semibold">UPI Name</span>{" "}
+              before submitting the form. This will help us verify your payment
+              quickly and without confusion.
+            </p>
+            <Button
+              onClick={() => setShowUPIAlert(false)}
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
+            >
+              Got it
+            </Button>
+          </div>
+        </div>
+      )}
+
       {!showPaymentPage ? (
         <Card className="bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl">
           <CardHeader className="text-center pb-4">
@@ -205,7 +260,7 @@ export default function RegistrationForm() {
           <CardContent className="space-y-6 text-gray-100">
             <div>
               <Label htmlFor="name">
-                Full Name <span className="text-cyan-400">*</span>{" "}
+                Full Name <span className="text-cyan-400">*</span>
               </Label>
               <Input
                 id="name"
@@ -218,7 +273,7 @@ export default function RegistrationForm() {
 
             <div>
               <Label htmlFor="phone">
-                Phone Number <span className="text-cyan-400">*</span>{" "}
+                Phone Number <span className="text-cyan-400">*</span>
               </Label>
               <Input
                 id="phone"
@@ -231,7 +286,7 @@ export default function RegistrationForm() {
 
             <div>
               <Label htmlFor="email">
-                Email <span className="text-cyan-400">*</span>{" "}
+                Email <span className="text-cyan-400">*</span>
               </Label>
               <Input
                 id="email"
@@ -245,7 +300,7 @@ export default function RegistrationForm() {
 
             <div>
               <Label className="text-gray-100">
-                Number of Tickets <span className="text-cyan-400">*</span>{" "}
+                Number of Tickets <span className="text-cyan-400">*</span>
                 <br />
                 <span className="text-sm text-gray-400">
                   (₹{TICKET_PRICE} each)
@@ -275,8 +330,7 @@ export default function RegistrationForm() {
                       Math.min(10, Number(e.target.value))
                     )
                   }
-                  className="w-24 text-center bg-black/30 text-gray-100 placeholder-gray-400 
-                 border border-white/20 focus:border-cyan-400 focus:ring-0 rounded-xl"
+                  className="w-24 text-center bg-black/30 text-gray-100 placeholder-gray-400 border border-white/20 focus:border-cyan-400 focus:ring-0 rounded-xl"
                   placeholder="1"
                 />
 
@@ -300,7 +354,7 @@ export default function RegistrationForm() {
               className="w-full bg-cyan-500 hover:bg-cyan-600 text-white flex items-center justify-center"
               onClick={() => validateStep1() && setShowPaymentPage(true)}
             >
-              Proceed to Pay (₹{formData.ticketCount * TICKET_PRICE}){" "}
+              Proceed to Pay (₹{formData.ticketCount * TICKET_PRICE})
               <ChevronRight className="ml-2 w-5 h-5" />
             </Button>
           </CardContent>
@@ -342,7 +396,24 @@ export default function RegistrationForm() {
               Pay with UPI App
             </Button>
 
-            <div className="w-full">
+            <div>
+              <label
+                htmlFor="upiName"
+                className="block text-gray-200 mb-2 font-medium"
+              >
+                UPI Name
+              </label>
+              <Input
+                id="upiName"
+                type="text"
+                value={formData.upiName || ""}
+                onChange={(e) => handleInputChange("upiName", e.target.value)}
+                placeholder="Enter your UPI account name"
+                className="w-full bg-black/30 border border-white/20 text-gray-100 placeholder-gray-400 rounded-xl"
+              />
+            </div>
+
+            {/* <div className="w-full">
               <label
                 htmlFor="paymentScreenshot"
                 className="w-full flex items-center justify-between px-4 py-3 bg-black/30 border border-white/20 rounded-xl cursor-pointer text-gray-100 hover:bg-black/40 transition"
@@ -371,11 +442,11 @@ export default function RegistrationForm() {
                   className="rounded-xl border border-white/20 shadow-lg"
                 />
               </div>
-            )}
+            )} */}
 
             <Button
               onClick={handleSubmit}
-              disabled={isLoading || !formData.paymentScreenshot}
+              disabled={isLoading}
               className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
             >
               {isLoading ? "Submitting..." : "Complete Registration"}

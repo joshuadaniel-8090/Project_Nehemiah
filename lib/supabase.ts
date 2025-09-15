@@ -22,6 +22,7 @@ export type Registration = {
   email: string;
   raffle_numbers?: string;
   ticket_count: number;
+  upi_name: string;
   payment_screenshot_url?: string;
   status: "pending" | "verified" | "rejected";
   created_at: string;

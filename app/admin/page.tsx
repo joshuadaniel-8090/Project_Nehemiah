@@ -312,6 +312,7 @@ export default function AdminDashboard() {
                     <TableHead>Tickets</TableHead>
                     <TableHead>Raffle Numbers</TableHead>
                     <TableHead>Screenshot</TableHead>
+                    <TableHead>UPI Name</TableHead> {/* ✅ New column */}
                     <TableHead>Verify</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
@@ -362,6 +363,18 @@ export default function AdminDashboard() {
                           </Button>
                         )}
                       </TableCell>
+
+                      {/* ✅ Show UPI Name here */}
+                      <TableCell>
+                        {registration.upi_name ? (
+                          <span className="text-gray-800">
+                            {registration.upi_name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </TableCell>
+
                       <TableCell>
                         <Checkbox
                           checked={registration.status === "verified"}

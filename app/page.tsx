@@ -57,8 +57,9 @@ export default function ProjectNehemiahLanding() {
             transition={{ duration: 1, delay: 0.9 }}
             className="mt-6 text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed"
           >
-            A divine mission to build a Christian church in a rural community —
-            bringing faith, hope, and God’s love to those who need it most.
+            A divine mission to establish a Christian church by securing a
+            building in a rural community — bringing faith, hope, and God’s love
+            to those who need it most.
           </motion.p>
         </motion.div>
         <motion.button
@@ -94,11 +95,11 @@ export default function ProjectNehemiahLanding() {
             Many families in rural communities have no proper place to worship
             God.{" "}
             <span className="text-cyan-300 font-semibold">
-              Project Nehemiah is about more than building a church
+              Project Nehemiah is not just about buying a building
             </span>
-            ; it’s about building hope, unity, and faith. Together, we can
-            create a sacred place where generations will gather to know God and
-            grow closer to Him.
+            ; it’s about transforming it into a house of prayer, a center of
+            hope, unity, and faith. Together, we can secure a sacred space where
+            generations will gather to worship, grow, and encounter God.
           </p>
 
           <motion.blockquote
@@ -157,6 +158,7 @@ export default function ProjectNehemiahLanding() {
             <p className="mt-3 text-gray-200 text-lg leading-relaxed">
               October 12, 2025
             </p>
+            <p className="text-gray-200 text-lg leading-relaxed">Sunday</p>
           </div>
 
           <div className="hidden md:flex items-center">
@@ -190,8 +192,8 @@ export default function ProjectNehemiahLanding() {
           <p className="text-lg md:text-xl text-gray-200 leading-relaxed tracking-wide">
             Be part of this{" "}
             <span className="text-cyan-300 font-semibold">divine journey</span>.
-            Your support will help us establish a sacred place where none exists
-            — a church for prayer, worship, and peace, bringing hope to
+            Your support will help us secure and dedicate a building as a church
+            — a place for prayer, worship, and peace, bringing hope and faith to
             generations yet to come.
           </p>
         </motion.div>
