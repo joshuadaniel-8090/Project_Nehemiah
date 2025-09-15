@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Project Nehemiah",
   description:
-    "Project Nehemiah — A crowdfunding initiative to build a church in a rural community, giving people a place to worship and grow closer to God.",
+    "Project Nehemiah — A crowdfunding mission to purchase and dedicate a building as a church in a rural community, creating a sacred space for worship, prayer, and fellowship.",
 };
 
 export default function RootLayout({
