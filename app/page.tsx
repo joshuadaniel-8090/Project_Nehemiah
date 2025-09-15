@@ -5,6 +5,7 @@ import RegistrationForm from "@/components/RegistrationForm";
 import { MapPin, Calendar, Clock, ChevronsDown } from "lucide-react";
 import Image from "next/image";
 import { useRef } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function ProjectNehemiahLanding() {
   const detailsRef = useRef<HTMLDivElement | null>(null);
@@ -130,21 +131,27 @@ export default function ProjectNehemiahLanding() {
           <div className="flex-1 text-center">
             <MapPin className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
             <h3 className="text-2xl font-bold text-cyan-400">Location</h3>
-            <a
-              href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6"
-              // className="mt-3 lg:w-[21rem] text-center text-ray-200 text-lg leading-relaxed text-cyan-100 underline"
-            >
-              <p className="mt-3 lg:w-[21rem] text-center text-gray-200 text-lg leading-relaxed underline">
-                St. Thomas Mount International Center, <br />
-                St. Thomas Mount Hill Top, <br />
-                Chennai
-              </p>
-            </a>
-            {/* <p className="mt-3 lg:w-[21rem] text-center text-gray-200 text-lg leading-relaxed">
-              St. Thomas Mount International Center, <br />
-              St. Thomas Mount Hill Top, <br />
-              Chennai
-            </p> */}
+            <p className="mt-3 lg:w-[21rem] -ml-4 text-center text-gray-200 text-lg leading-relaxed">
+              <span className="whitespace-nowrap">
+                St. Thomas Mount International Center,
+              </span>
+              <br />
+              St. Thomas Mount Hill Top, Chennai
+            </p>
+            <div className="my-3">
+              <a href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6" className="my-8">
+                <Button className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-md px-4">
+                  Open in Maps
+                </Button>
+              </a>
+            </div>
+            {/* <div className="flex items-center justify-center mt-8">
+              <a href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6">
+                <Button className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-md px-4 mb-4">
+                  Open in Maps
+                </Button>
+              </a>
+            </div> */}
           </div>
 
           <div className="hidden md:flex items-center">
