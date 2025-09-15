@@ -59,7 +59,7 @@ export default function ProjectNehemiahLanding() {
             className="mt-6 text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed"
           >
             A divine mission to establish a Christian church by securing a
-            building in a rural community — bringing faith, hope, and God’s love
+            building in a rural community bringing faith, hope, and God’s love
             to those who need it most.
           </motion.p>
         </motion.div>
@@ -112,7 +112,7 @@ export default function ProjectNehemiahLanding() {
           >
             “So we built the wall, and the entire wall was joined together up to
             half its height, for the people had a mind to work.”{" "}
-            <span className="text-cyan-400 font-semibold">— Nehemiah 4:6</span>
+            <span className="text-cyan-400 font-semibold">- Nehemiah 4:6</span>
           </motion.blockquote>
         </motion.div>
       </section>
@@ -203,7 +203,7 @@ export default function ProjectNehemiahLanding() {
             Be part of this{" "}
             <span className="text-cyan-300 font-semibold">divine journey</span>.
             Your support will help us secure and dedicate a building as a church
-            — a place for prayer, worship, and peace, bringing hope and faith to
+            a place for prayer, worship, and peace, bringing hope and faith to
             generations yet to come.
           </p>
         </motion.div>
