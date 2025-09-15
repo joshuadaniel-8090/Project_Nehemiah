@@ -31,7 +31,7 @@ export default function AdminDashboard() {
   const [sortBy, setSortBy] = useState<"date" | "status">("date");
 
   // Simple password protection
-  const ADMIN_PASSWORD = "admin123";
+  const ADMIN_PASSWORD = "#Admin@123";
 
   useEffect(() => {
     if (isAuthenticated) {
