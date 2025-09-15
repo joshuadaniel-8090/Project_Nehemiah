@@ -405,6 +405,34 @@ export default function RegistrationForm() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-lg">
+              {/* Instructions */}
+              <div className="mb-6 text-gray-300 text-left text-sm md:text-base leading-relaxed bg-black/30 border border-white/10 rounded-xl p-4">
+                <p className="mb-2 font-medium text-cyan-300">How to Pay</p>
+                <ol className="list-decimal list-inside space-y-1 text-gray-200">
+                  <li>Take a screenshot of the QR code below.</li>
+                  <li>Open your UPI app (PhonePe, Google Pay, Paytm, etc.).</li>
+                  <li>
+                    Choose{" "}
+                    <span className="font-semibold text-cyan-400">
+                      “Scan QR”
+                    </span>{" "}
+                    option.
+                  </li>
+                  <li>
+                    Select{" "}
+                    <span className="font-semibold text-cyan-400">
+                      “Upload from Gallery”
+                    </span>{" "}
+                    and pick the screenshot.
+                  </li>
+                  <li>
+                    Confirm and complete the payment of{" "}
+                    <span className="font-semibold text-cyan-400">₹{amount}</span>.
+                  </li>
+                </ol>
+              </div>
+
+              {/* QR Code Section */}
               <h3 className="text-lg md:text-xl font-semibold mb-4 text-gray-200">
                 Scan to Pay
                 <span className="text-cyan-400"> ₹{amount}</span>
