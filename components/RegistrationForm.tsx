@@ -281,9 +281,16 @@ export default function RegistrationForm() {
               Event Registration
             </CardTitle>
             <p className="text-gray-300 mt-2">
-              {ticketsRemaining > 0
-                ? `${ticketsRemaining} tickets remaining`
-                : "All tickets sold out!"}
+              {ticketsRemaining > 0 ? (
+                <>
+                  <span className="text-red-500 font-semibold">
+                    {ticketsRemaining}
+                  </span>{" "}
+                  tickets remaining
+                </>
+              ) : (
+                "All tickets sold out!"
+              )}
             </p>
           </CardHeader>
           <CardContent className="space-y-6 text-gray-100">
