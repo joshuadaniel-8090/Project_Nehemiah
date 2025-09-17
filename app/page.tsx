@@ -141,7 +141,7 @@ export default function ProjectNehemiahLanding() {
           <div className="flex-1 text-center">
             <MapPin className="mx-auto w-8 h-8 text-cyan-400 mb-2" />
             <h3 className="text-2xl font-bold text-cyan-400">Location</h3>
-            <p className="mt-3 lg:w-[21rem] -ml-4 text-center text-gray-200 text-lg leading-relaxed">
+            <p className="mt-3 lg:w-[21rem] -ml-8 text-center text-gray-200 text-lg leading-relaxed">
               <span className="whitespace-nowrap">
                 St. Thomas Mount International Center,
               </span>
