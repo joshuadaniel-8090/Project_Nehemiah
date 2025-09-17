@@ -407,8 +407,22 @@ export default function AdminDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(registration.created_at).toLocaleDateString()}
+                        <span className="font-bold text-red-500">
+                          {new Date(registration.created_at).toLocaleString(
+                            "en-IN",
+                            {
+                              timeZone: "Asia/Kolkata", // convert to IST
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false, // 24-hour format, set true if you want AM/PM
+                            }
+                          )}
+                        </span>
                       </TableCell>
+
                       <TableCell className="space-x-2">
                         <Button
                           variant="outline"
