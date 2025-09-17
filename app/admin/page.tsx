@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { supabase, Registration } from "@/lib/supabase";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,20 +16,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Eye, RefreshCw, X, MessageCircle, Search } from "lucide-react";
+import { Copy, RefreshCw, MessageCircle, Search, Download } from "lucide-react";
 import { toast } from "sonner";
+import { toPng } from "html-to-image";
 
 export default function AdminDashboard() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [searchName, setSearchName] = useState("");
   const [searchRaffleNumber, setSearchRaffleNumber] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "status">("date");
 
-  // Simple password protection
   const ADMIN_PASSWORD = "#Admin@123";
 
   useEffect(() => {
@@ -62,7 +60,6 @@ export default function AdminDashboard() {
       }
 
       const { data, error } = await query;
-
       if (error) {
         console.error("Fetch error:", error);
         toast.error("Failed to load registrations");
@@ -82,36 +79,36 @@ export default function AdminDashboard() {
     if (registration.status === "verified") return;
 
     try {
-      // Step 1: Fetch the highest ticket number so far
-      const { data: lastTicket, error: lastError } = await supabase
+      const { data: allTickets, error: lastError } = await supabase
         .from("registrations")
         .select("raffle_numbers");
 
       if (lastError) throw lastError;
 
       let lastNumber = 0;
-      if (lastTicket && lastTicket.length > 0) {
+      if (allTickets && allTickets.length > 0) {
         lastNumber = Math.max(
-          ...lastTicket.flatMap((row) => row.raffle_numbers || [0])
+          ...allTickets.flatMap((row) => {
+            if (!row.raffle_numbers) return [0];
+            const arr = Array.isArray(row.raffle_numbers)
+              ? row.raffle_numbers
+              : String(row.raffle_numbers).split(", ");
+            return arr.map((n: any) => parseInt(n, 10) || 0);
+          })
         );
       }
 
-      // Step 2: Generate new sequential numbers
       const ticketCount = registration.ticket_count || 1;
       const newTickets = Array.from(
         { length: ticketCount },
         (_, i) => lastNumber + i + 1
-      );
+      ).map((n) => n.toString().padStart(3, "0"));
 
-      // Step 3: Update registration
       const { error: updateError } = await supabase
         .from("registrations")
         .update({
           status: "verified",
-          // ticket_numbers: newTickets, // store as array
-          raffle_numbers: newTickets
-            .map((n) => `${n.toString().padStart(3, "0")}`)
-            .join(", "),
+          raffle_numbers: newTickets,
           updated_at: new Date().toISOString(),
         })
         .eq("id", registration.id);
@@ -119,9 +116,7 @@ export default function AdminDashboard() {
       if (updateError) throw updateError;
 
       toast.success(
-        `Assigned raffle numbers: ${newTickets
-          .map((n) => `#${n.toString().padStart(3, "0")}`)
-          .join(", ")}`
+        `Assigned raffle numbers: ${newTickets.map((n) => `#${n}`).join(", ")}`
       );
       fetchRegistrations();
     } catch (error) {
@@ -139,7 +134,9 @@ export default function AdminDashboard() {
     const message = `Hey *${registration.name}*, your registration for *${
       registration.ticket_count || 1
     }* ticket(s) is verified! 🎉 Your raffle numbers: *${
-      registration.raffle_numbers
+      Array.isArray(registration.raffle_numbers)
+        ? registration.raffle_numbers.join(", ")
+        : registration.raffle_numbers
     }*. Thanks for participating!`;
 
     navigator.clipboard
@@ -153,24 +150,65 @@ export default function AdminDashboard() {
     window.open(`https://wa.me/91${phone}`, "_blank");
   };
 
-  const openImage = (url: string) => setPreviewUrl(url);
-  const closeImage = () => setPreviewUrl(null);
+  const downloadAckImage = async (registration: Registration) => {
+    if (!registration.raffle_numbers || registration.status !== "verified") {
+      toast.error("Please verify first");
+      return;
+    }
+
+    const node = document.getElementById(`ack-${registration.id}`);
+    if (!node) return;
+
+    try {
+      const scale = 2; // make image sharper
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        width: node.scrollWidth * scale,
+        height: node.scrollHeight * scale,
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `${node.scrollWidth}px`,
+          height: `${node.scrollHeight}px`,
+        },
+      });
+
+      const link = document.createElement("a");
+      link.download = `${registration.name}-acknowledgement.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Acknowledgement image downloaded!");
+    } catch (err) {
+      console.error("Ack error:", err);
+      toast.error("Failed to generate acknowledgement");
+    }
+  };
 
   const filteredRegistrations = registrations.filter((registration) => {
     const nameMatch = searchName
-      ? registration.name.toLowerCase().includes(searchName.toLowerCase())
+      ? registration.name?.toLowerCase().includes(searchName.toLowerCase())
       : true;
 
     let raffleMatch = true;
     if (searchRaffleNumber) {
-      if (!registration.raffle_numbers) raffleMatch = false;
-      else {
-        const cleanSearch = searchRaffleNumber
+      if (!registration.raffle_numbers) {
+        raffleMatch = false;
+      } else {
+        const raffleArray = Array.isArray(registration.raffle_numbers)
+          ? registration.raffle_numbers
+          : String(registration.raffle_numbers)
+              .split(",")
+              .map((num) => num.trim())
+              .filter(Boolean);
+
+        const cleanSearch = String(searchRaffleNumber)
           .replace(/#/g, "")
           .replace(/^0+/, "");
-        const cleanRaffleNumbers = registration.raffle_numbers
-          .split(", ")
-          .map((num) => num.replace(/#/g, "").replace(/^0+/, ""));
+
+        const cleanRaffleNumbers = raffleArray.map((num) =>
+          String(num).replace(/#/g, "").replace(/^0+/, "")
+        );
+
         raffleMatch = cleanRaffleNumbers.some((num) =>
           num.includes(cleanSearch)
         );
@@ -252,7 +290,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Sorting Buttons */}
         <div className="flex">
           <div className="my-4 flex items-center">
             <Button
@@ -297,7 +334,6 @@ export default function AdminDashboard() {
                     <TableHead>Email</TableHead>
                     <TableHead>Tickets</TableHead>
                     <TableHead>Raffle Numbers</TableHead>
-                    <TableHead>Screenshot</TableHead>
                     <TableHead>UPI Name</TableHead>
                     <TableHead>Verify</TableHead>
                     <TableHead>Status</TableHead>
@@ -317,24 +353,12 @@ export default function AdminDashboard() {
                         {registration.ticket_count || 1}
                       </TableCell>
                       <TableCell>
-                        {Array.isArray(registration.raffle_numbers) ? (
+                        {registration.raffle_numbers ? (
                           <div className="flex flex-wrap gap-1 max-w-xs">
-                            {registration.raffle_numbers.map(
-                              (num: number, i: number) => (
-                                <Badge
-                                  key={i}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  #{num.toString().padStart(3, "0")}
-                                </Badge>
-                              )
-                            )}
-                          </div>
-                        ) : registration.raffle_numbers ? (
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                            {(registration.raffle_numbers as string)
-                              .split(", ")
+                            {(Array.isArray(registration.raffle_numbers)
+                              ? registration.raffle_numbers
+                              : String(registration.raffle_numbers).split(", ")
+                            )
                               .filter(Boolean)
                               .map((num, i) => (
                                 <Badge
@@ -351,19 +375,6 @@ export default function AdminDashboard() {
                         )}
                       </TableCell>
 
-                      <TableCell>
-                        {registration.payment_screenshot_url && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              openImage(registration.payment_screenshot_url!)
-                            }
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </TableCell>
                       <TableCell>
                         {registration.upi_name ? (
                           <span className="text-gray-800">
@@ -398,7 +409,7 @@ export default function AdminDashboard() {
                       <TableCell>
                         {new Date(registration.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -413,14 +424,133 @@ export default function AdminDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="ml-2"
                           onClick={() => openWhatsAppChat(registration)}
                           disabled={!registration.phone}
-                          aria-label="Open WhatsApp"
                         >
                           <MessageCircle className="w-4 h-4" />
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadAckImage(registration)}
+                          disabled={
+                            !registration.raffle_numbers ||
+                            registration.status !== "verified"
+                          }
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
                       </TableCell>
+
+                      {/* hidden but still renderable acknowledgement */}
+                      <td
+                        style={{
+                          position: "absolute",
+                          left: "-9999px",
+                          top: "0",
+                        }}
+                      >
+                        <div
+                          id={`ack-${registration.id}`}
+                          style={{
+                            width: "600px",
+                            height: "600px",
+                            padding: "24px",
+                            backgroundColor: "#fff",
+                            border: "2px solid #000",
+                            borderRadius: "12px",
+                            fontFamily: "sans-serif",
+                          }}
+                        >
+                          <h1
+                            style={{
+                              fontSize: "32px",
+                              marginBottom: "140px",
+                              textAlign: "center",
+                              fontWeight: "bold",
+                              color: "#0ea5e9",
+                              textDecoration: "underline",
+                              textUnderlineOffset: "8px",
+                              textDecorationThickness: "4px",
+                              textDecorationColor: "#22d3ee",
+                            }}
+                          >
+                            🎟️ Event Ticket Acknowledgement
+                          </h1>
+                          <h2
+                            style={{
+                              fontSize: "24px",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                              color: "#22d3ee",
+                              marginBottom: "20px",
+                            }}
+                          >
+                            {registration.name}
+                          </h2>
+                          <p
+                            style={{
+                              textAlign: "center",
+                              marginTop: "8px",
+                              fontSize: "18px",
+                            }}
+                          >
+                            Tickets Purchased:{" "}
+                            <span
+                              style={{ color: "#22d3ee", fontWeight: "bold" }}
+                            >
+                              {registration.ticket_count}
+                            </span>
+                          </p>
+
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fill, minmax(100px, 1fr))",
+                              gap: "12px",
+                              marginTop: "20px",
+                              justifyContent: "center",
+                              textAlign: "center",
+                            }}
+                          >
+                            {(Array.isArray(registration.raffle_numbers)
+                              ? registration.raffle_numbers
+                              : String(registration.raffle_numbers).split(", ")
+                            )
+                              .filter(Boolean)
+                              .map((num, i) => (
+                                <div
+                                  key={i}
+                                  style={{
+                                    padding: "12px",
+                                    border: "1px solid #ccc",
+                                    borderRadius: "6px",
+                                    textAlign: "center",
+                                    fontSize: "20px",
+                                    fontWeight: "600",
+                                    background: "#f9f9f9",
+                                  }}
+                                >
+                                  {num}
+                                </div>
+                              ))}
+                          </div>
+                          <p
+                            style={{
+                              textAlign: "center",
+                              marginTop: "160px",
+                              fontSize: "18px",
+                              fontStyle: "italic",
+                              color: "#555",
+                              letterSpacing: "2px",
+                              lineHeight: "1.2",
+                            }}
+                          >
+                            Thanks for being a part of this event!
+                          </p>
+                        </div>
+                      </td>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -429,31 +559,6 @@ export default function AdminDashboard() {
           )}
         </CardContent>
       </Card>
-
-      {previewUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-4 shadow-lg max-w-xs w-full flex flex-col items-center relative">
-            <Button
-              onClick={closeImage}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-            <Image
-              src={previewUrl || ""}
-              alt="Payment Screenshot"
-              width={384}
-              height={384}
-              className="max-w-full max-h-96 mb-4 rounded"
-              style={{ objectFit: "contain" }}
-            />
-            <Button onClick={closeImage} className="w-full">
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

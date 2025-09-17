@@ -29,7 +29,7 @@ interface FormData {
 }
 
 const MAX_TICKETS = 250;
-const TICKET_PRICE = 20;
+const TICKET_PRICE = 500;
 
 export default function RegistrationForm() {
   const [showPaymentPage, setShowPaymentPage] = useState(false);
@@ -329,12 +329,16 @@ export default function RegistrationForm() {
 
             <div>
               <Label className="text-gray-100">
-                Number of Tickets <span className="text-cyan-400">*</span>
-                <br />
-                <span className="text-sm text-gray-400">
+                Number of Tickets {""}
+                <span className="text-cyan-400">* </span>
+                <span className="text-sm font-bold text-gray-400">
                   (₹{TICKET_PRICE} each)
                 </span>
               </Label>
+              <p className="text-sm text-gray-400">
+                Please note that tickets are required for all children
+                attending.
+              </p>
               <div className="flex items-center space-x-3 mt-2">
                 <Button
                   size="icon"
@@ -443,7 +447,9 @@ export default function RegistrationForm() {
 
               <div className="p-4 bg-white border border-white rounded-xl">
                 <QRCode
-                  value={`upi://pay?pa=jjoshuadaniel1234@oksbi&pn=Event+Registration&am=${amount}&cu=INR&tn=Event+Registration+-+${amount}+INR`}
+                  value={`upi://pay?pa=shajanjacques@oksbi&pn=Event+Registration&am=${amount}&cu=INR&tn=${encodeURIComponent(
+                    `Event Registration of ₹${amount}`
+                  )}`}
                   size={160}
                 />
               </div>

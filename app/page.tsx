@@ -40,7 +40,7 @@ export default function ProjectNehemiahLanding() {
             transition={{ duration: 1, delay: 0.3 }}
             className="text-lg md:text-xl text-cyan-300 tracking-widest uppercase mb-4"
           >
-            Faith • Hope • Unity
+            Faith • Sing • Transform
           </motion.p>
 
           <motion.h1
@@ -103,7 +103,7 @@ export default function ProjectNehemiahLanding() {
             generations will gather to worship, grow and encounter God.
           </p>
 
-          <motion.blockquote
+          {/* <motion.blockquote
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -113,6 +113,16 @@ export default function ProjectNehemiahLanding() {
             “So we built the wall and the entire wall was joined together up to
             half its height, for the people had a mind to work.”{" "}
             <span className="text-cyan-400 font-semibold">- Nehemiah 4:6</span>
+          </motion.blockquote> */}
+          <motion.blockquote
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6, duration: 1 }}
+            className="mt-10 italic text-gray-300 text-lg md:text-xl font-light"
+          >
+            “The Lord prepares us and goes before us Arise and Rebuild.”{" "}
+            <span className="text-cyan-400 font-semibold">- Nehemiah 2</span>
           </motion.blockquote>
         </motion.div>
       </section>
@@ -218,9 +228,27 @@ export default function ProjectNehemiahLanding() {
         <RegistrationForm />
       </motion.section>
       {/* Footer */}
-      <footer className="bg-black/80 py-6 text-center text-sm text-gray-500">
-        Project Nehemiah. | Location: St. Thomas Mount, Chennai. | Event Date:
-        Oct 12, 2025, | 6 PM.
+      <footer className="bg-black/80 py-6 text-center text-sm text-gray-500 space-y-2">
+        <p>
+          Project Nehemiah. | Location: St. Thomas Mount, Chennai. | Event Date:
+          Oct 12, 2025, | 6 PM.
+        </p>
+        <p className="text-gray-400">
+          Contact:{" "}
+          <a
+            href="tel:+91 98840 20220"
+            className="text-cyan-400 hover:underline mx-2"
+          >
+            Shajan
+          </a>
+          |
+          <a
+            href="tel:+91 98407 76759"
+            className="text-cyan-400 hover:underline mx-2"
+          >
+            Torsten
+          </a>
+        </p>
       </footer>
     </div>
   );
