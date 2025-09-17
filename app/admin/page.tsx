@@ -133,7 +133,7 @@ export default function AdminDashboard() {
 
     const message = `Hey *${registration.name}*, your registration for *${
       registration.ticket_count || 1
-    }* ticket(s) is verified! 🎉 Your raffle numbers: *${
+    }* ticket(s) is verified! 🎉 Your ticket numbers: *${
       Array.isArray(registration.raffle_numbers)
         ? registration.raffle_numbers.join(", ")
         : registration.raffle_numbers
