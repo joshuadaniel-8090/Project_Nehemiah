@@ -121,7 +121,7 @@ export default function ProjectNehemiahLanding() {
             transition={{ delay: 0.6, duration: 1 }}
             className="mt-10 italic text-gray-300 text-lg md:text-xl font-light"
           >
-            “The Lord prepares us and goes before us Arise and Rebuild.”{" "}
+            “The Lord prepares us and goes before us. Arise and Rebuild!”{" "}
             <span className="text-cyan-400 font-semibold">- Nehemiah 2</span>
           </motion.blockquote>
         </motion.div>
