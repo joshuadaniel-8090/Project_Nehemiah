@@ -205,11 +205,14 @@ export default function StaffScannerPage() {
                       height: "100%",
                       objectFit: "cover",
                     }}
-                    facingMode="environment" // rear camera
-                    onScan={(data) => {
-                      if (data) onScan(data); // your scan handler
+                    facingMode="environment"
+                    onScan={(data: any) => {
+                      if (data && data.text) {
+                        onScan(data.text); // pass only the text
+                        setLastScan(data.text); // store only the string, not the full object
+                      }
                     }}
-                    onError={(err) => {
+                    onError={(err: any) => {
                       console.error(err);
                       toast.error(
                         "Camera error: " + (err?.message || String(err))
@@ -227,8 +230,9 @@ export default function StaffScannerPage() {
 
               <div className="mt-3">
                 <p className="text-sm text-gray-600">Last scanned:</p>
-                <div className="mt-1 p-3 bg-gray-50 rounded">
-                  {lastScan ?? "—"}
+                <div className="mt-1 p-3 bg-gray-50">
+                  {lastScan ?? "—"}{" "}
+                  {/* lastScan is now a string, safe to render */}
                 </div>
               </div>
 
