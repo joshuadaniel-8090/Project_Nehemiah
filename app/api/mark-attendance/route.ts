@@ -1,4 +1,5 @@
-// app/api/mark-attendance/route.ts
+export const dynamic = "force-dynamic";
+
 import { supabase } from "@/lib/supabase";
 
 export async function GET(req: Request) {
