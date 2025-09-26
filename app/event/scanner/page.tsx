@@ -198,17 +198,22 @@ export default function StaffScannerPage() {
               {scanning && cameraSupported ? (
                 <div className="w-full h-96 bg-black flex items-center justify-center">
                   <QrReader
-                    constraints={{ facingMode: { exact: "environment" } }} // rear camera
-                    onScan={(data: string | null) => {
-                      if (data) onScan(data); // call your handler
-                    }}
-                    onError={(err: any) => {
-                      onError(err); // call your error handler
-                    }}
-                    style={{
+                    delay={500}
+                    style={{ width: "100%", height: "100%" }}
+                    videoStyle={{
                       width: "100%",
                       height: "100%",
                       objectFit: "cover",
+                    }}
+                    constraints={{ facingMode: { exact: "environment" } }} // rear camera
+                    onScan={(data) => {
+                      if (data) onScan(data);
+                    }}
+                    onError={(err) => {
+                      console.error(err);
+                      toast.error(
+                        "Camera error: " + (err?.message || String(err))
+                      );
                     }}
                   />
                 </div>
