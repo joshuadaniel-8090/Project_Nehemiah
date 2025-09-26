@@ -1,17 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-
-// TypeScript: declare module to avoid missing types
-declare module "react-qr-scanner";
-
-// Dynamic import to prevent SSR
-const QrReader = dynamic(() => import("react-qr-scanner"), { ssr: false });
+import BarcodeScanner from "react-qr-barcode-scanner";
 
 export default function StaffScannerPage() {
   const [mounted, setMounted] = useState(false);
@@ -21,9 +17,6 @@ export default function StaffScannerPage() {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">(
-    "environment"
-  ); // rear camera by default
 
   useEffect(() => {
     setMounted(true);
@@ -37,8 +30,11 @@ export default function StaffScannerPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) sessionStorage.setItem("staff_pw", staffPassword);
-    else sessionStorage.removeItem("staff_pw");
+    if (isLoggedIn) {
+      sessionStorage.setItem("staff_pw", staffPassword);
+    } else {
+      sessionStorage.removeItem("staff_pw");
+    }
   }, [isLoggedIn, staffPassword]);
 
   if (!mounted) return null;
@@ -56,23 +52,8 @@ export default function StaffScannerPage() {
     setIsLoggedIn(false);
     setStaffPassword("");
     setScanning(false);
+    sessionStorage.removeItem("staff_pw");
     toast.success("Logged out");
-  };
-
-  const requestCameraPermission = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast.error("Camera not supported on this device/browser");
-      setCameraSupported(false);
-      return;
-    }
-    try {
-      await navigator.mediaDevices.getUserMedia({ video: true });
-      setCameraSupported(true);
-    } catch (err) {
-      console.error(err);
-      toast.error("Camera permission denied or not available");
-      setCameraSupported(false);
-    }
   };
 
   const onScan = async (data: string | null) => {
@@ -93,10 +74,8 @@ export default function StaffScannerPage() {
         toast.error("No valid ID found in QR");
         return;
       }
-
       const confirmed = confirm(`Mark attendance for ID: ${idParam}?`);
       if (!confirmed) return;
-
       setIsProcessing(true);
       const res = await fetch(
         `/api/mark-attendance?id=${encodeURIComponent(idParam)}`,
@@ -109,8 +88,11 @@ export default function StaffScannerPage() {
         }
       );
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) toast.error(json?.error || `Failed (${res.status})`);
-      else toast.success(json?.message || "Attendance marked successfully");
+      if (!res.ok) {
+        toast.error(json?.error || `Failed (${res.status})`);
+      } else {
+        toast.success(json?.message || "Attendance marked successfully");
+      }
     } catch (err: any) {
       toast.error(err?.message || "Scan processing error");
     } finally {
@@ -121,10 +103,6 @@ export default function StaffScannerPage() {
   const onError = (err: any) => {
     console.error(err);
     toast.error("Camera error: " + (err?.message || String(err)));
-  };
-
-  const toggleCamera = () => {
-    setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
   };
 
   return (
@@ -171,39 +149,24 @@ export default function StaffScannerPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={async () => {
-                      await requestCameraPermission();
-                      setScanning((s) => !s);
-                    }}
+                    onClick={() => setScanning((s) => !s)}
+                    className="bg-cyan-500"
                   >
                     {scanning ? "Stop Camera" : "Start Camera"}
                   </Button>
-                  <Button onClick={toggleCamera}>Switch Camera</Button>
                   <Button onClick={handleLogout} variant="destructive">
                     Logout
                   </Button>
                 </div>
               </div>
-
-              {!cameraSupported && (
-                <p className="text-red-500 text-center mt-2">
-                  Camera not supported or permission denied.
-                </p>
-              )}
-
-              {scanning && cameraSupported ? (
+              {scanning ? (
                 <div className="w-full h-96 bg-black flex items-center justify-center">
-                  <QrReader
-                    delay={500}
-                    style={{ width: "100%", height: "100%" }}
-                    videoStyle={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
+                  <BarcodeScanner
+                    facingMode="environment"
+                    onUpdate={(err, result) => {
+                      if (result) onScan(result.getText());
+                      else onError(err);
                     }}
-                    facingMode={facingMode} // <-- toggle front/back
-                    onScan={onScan}
-                    onError={onError}
                   />
                 </div>
               ) : (
@@ -213,19 +176,9 @@ export default function StaffScannerPage() {
                   </p>
                 </div>
               )}
-
               <div className="mt-3">
                 <p className="text-sm text-gray-600">Last scanned:</p>
                 <div className="mt-1 p-3 bg-gray-50">{lastScan ?? "—"}</div>
-              </div>
-
-              <div className="mt-4">
-                <small className="text-xs text-gray-500">
-                  Notes: The scanner expects the QR to contain a URL with an
-                  `id` query parameter or the raw ticket id/token. Scanning
-                  outside this page (e.g., Google Lens) will not mark
-                  attendance.
-                </small>
               </div>
             </div>
           )}
