@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase"; // you already have this set up
+import { supabase } from "@/lib/supabase";
 import QRCode from "react-qr-code";
 
 interface Registration {
@@ -9,7 +9,7 @@ interface Registration {
   name: string;
   phone: string;
   ticket_count: number;
-  raffle_numbers: string[];
+  raffle_numbers: string[]; // always convert to array
   attendance_present: boolean;
   attendance_time: string | null;
 }
@@ -19,7 +19,7 @@ export default function EventPage() {
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [error, setError] = useState("");
 
-  // fetch user by phone
+  // Fetch user by phone
   const handleLogin = async () => {
     setError("");
     setRegistration(null);
@@ -30,26 +30,44 @@ export default function EventPage() {
       .eq("phone", phone)
       .single();
 
-    if (error || !data) {
+    if (error) {
+      setError(`Database error: ${error.message}`);
+      return;
+    }
+    if (!data) {
       setError("No registration found for this phone number.");
       return;
     }
 
-    setRegistration(data);
-    subscribeToAttendance(data.id);
+    // Ensure raffle_numbers is always an array
+    const normalizedData: Registration = {
+      ...data,
+      raffle_numbers: Array.isArray(data.raffle_numbers)
+        ? data.raffle_numbers
+        : typeof data.raffle_numbers === "string"
+        ? JSON.parse(data.raffle_numbers)
+        : [],
+    };
+
+    setRegistration(normalizedData);
+
+    // Automatically mark attendance
+    markAttendance(normalizedData.id);
   };
 
-  // real-time updates for attendance
-  const subscribeToAttendance = (id: number) => {
+  // Real-time subscription for attendance updates
+  useEffect(() => {
+    if (!registration) return;
+
     const channel = supabase
-      .channel(`attendance-${id}`)
+      .channel(`attendance-${registration.id}`)
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "registrations",
-          filter: `id=eq.${id}`,
+          filter: `id=eq.${registration.id}`,
         },
         (payload) => {
           setRegistration((prev) =>
@@ -58,6 +76,27 @@ export default function EventPage() {
         }
       )
       .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [registration?.id]);
+
+  // Call API to mark attendance
+  const markAttendance = async (id: number) => {
+    try {
+      const res = await fetch(
+        `/api/mark-attendance?id=${id}`,
+        { method: "GET" } // your API expects GET
+      );
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data?.error || "Failed to mark attendance");
+      }
+      // Success: real-time subscription will update the UI
+    } catch (err) {
+      setError("Network error while marking attendance");
+    }
   };
 
   return (
@@ -103,12 +142,7 @@ export default function EventPage() {
               Tickets:{" "}
               <span className="font-bold">{registration.ticket_count}</span>
             </p>
-            <p>
-              Ticket Numbers:{" "}
-              {Array.isArray(registration.raffle_numbers)
-                ? registration.raffle_numbers.join(", ")
-                : String(registration.raffle_numbers)}
-            </p>
+            <p>Ticket Numbers: {registration.raffle_numbers.join(", ")}</p>
           </div>
 
           {/* Banner */}
