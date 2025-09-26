@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import QRCode from "react-qr-code";
@@ -50,9 +49,7 @@ export default function EventPage() {
     };
 
     setRegistration(normalizedData);
-
-    // Automatically mark attendance
-    markAttendance(normalizedData.id);
+    // ❌ Removed auto markAttendance here
   };
 
   // Poll registration every 1 second to auto-refresh attendance
