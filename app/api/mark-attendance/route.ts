@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export const dynamic = "force-dynamic"; // tell Next.js this is runtime dynamic
+// export const dynamic = "force-dynamic"; // tell Next.js this is runtime dynamic
 
 export async function GET(req: Request) {
   try {
