@@ -205,9 +205,9 @@ export default function StaffScannerPage() {
                       height: "100%",
                       objectFit: "cover",
                     }}
-                    constraints={{ facingMode: { exact: "environment" } }} // rear camera
+                    facingMode="environment" // rear camera
                     onScan={(data) => {
-                      if (data) onScan(data);
+                      if (data) onScan(data); // your scan handler
                     }}
                     onError={(err) => {
                       console.error(err);
