@@ -208,6 +208,9 @@ export default function StaffScannerPage() {
                     onScan={(result: string | null) => {
                       if (result) onScan(result);
                     }}
+                    constraints={{
+                      facingMode: { exact: "environment" }, // rear camera
+                    }}
                   />
                 </div>
               ) : (
