@@ -6,11 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import {
-  Html5Qrcode,
-  Html5QrcodeScannerState,
-  Html5QrcodeCameraScanConfig,
-} from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeCameraScanConfig } from "html5-qrcode";
 
 export default function StaffScannerPage() {
   const [mounted, setMounted] = useState(false);
@@ -20,12 +16,10 @@ export default function StaffScannerPage() {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
-  const [cameraId, setCameraId] = useState<string | null>(null);
   const html5QrRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     setMounted(true);
-
     if (typeof window !== "undefined") {
       const savedPw = sessionStorage.getItem("staff_pw");
       if (savedPw) {
@@ -36,11 +30,8 @@ export default function StaffScannerPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      sessionStorage.setItem("staff_pw", staffPassword);
-    } else {
-      sessionStorage.removeItem("staff_pw");
-    }
+    if (isLoggedIn) sessionStorage.setItem("staff_pw", staffPassword);
+    else sessionStorage.removeItem("staff_pw");
   }, [isLoggedIn, staffPassword]);
 
   if (!mounted) return null;
@@ -66,7 +57,6 @@ export default function StaffScannerPage() {
   const onScan = async (decodedText: string) => {
     if (!decodedText || decodedText === lastScan) return;
     setLastScan(decodedText);
-
     try {
       let idParam: string | null = null;
       try {
@@ -101,11 +91,8 @@ export default function StaffScannerPage() {
 
       const json = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        toast.error(json?.error || `Failed (${res.status})`);
-      } else {
-        toast.success(json?.message || "Attendance marked successfully");
-      }
+      if (!res.ok) toast.error(json?.error || `Failed (${res.status})`);
+      else toast.success(json?.message || "Attendance marked successfully");
     } catch (err: any) {
       toast.error(err?.message || "Scan processing error");
     } finally {
@@ -127,16 +114,15 @@ export default function StaffScannerPage() {
         setCameraSupported(false);
         return;
       }
+
       const rearCamera =
         cameras.find((c) => c.label.toLowerCase().includes("back")) ||
         cameras[0];
-      setCameraId(rearCamera.id);
-
       html5QrRef.current = new Html5Qrcode("reader");
 
       await html5QrRef.current.start(
         rearCamera.id,
-        { fps: 10, qrbox: 250 } as Html5QrcodeCameraScanConfig,
+        { fps: 10, qrbox: 300 } as Html5QrcodeCameraScanConfig,
         onScan,
         (err) => console.warn("QR scan error:", err)
       );
@@ -161,19 +147,28 @@ export default function StaffScannerPage() {
 
   return (
     <motion.div
+      className="min-h-screen flex items-center justify-center p-4 bg-black/90"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen flex items-center justify-center p-6 bg-gray-50"
     >
-      <Card className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-lg">
-        <CardHeader className="p-6">
-          <CardTitle className="text-2xl font-bold">Staff Scanner</CardTitle>
-          <p className="text-sm text-gray-500 mt-1">
+      <Card className="w-full max-w-md sm:max-w-3xl mx-auto bg-gray-900 rounded-2xl shadow-xl">
+        <CardHeader className="p-6 text-center sm:text-left">
+          <CardTitle className="text-3xl sm:text-2xl font-bold text-white">
+            Staff Scanner
+          </CardTitle>
+          <p className="text-gray-300 mt-2 text-sm sm:text-base">
             Log in with staff password and scan attendee QR codes to mark
             attendance.
           </p>
         </CardHeader>
-        <CardContent className="p-6">
+        <Button
+          onClick={handleLogout}
+          variant="destructive"
+          className="ml-[18rem] px-3 py-1 text-sm"
+        >
+          Logout
+        </Button>
+        <CardContent className="p-4 sm:p-6 space-y-6">
           {!isLoggedIn ? (
             <div className="space-y-4">
               <Input
@@ -181,80 +176,71 @@ export default function StaffScannerPage() {
                 type="password"
                 value={staffPassword}
                 onChange={(e) => setStaffPassword(e.target.value)}
-                className="max-w-sm"
+                className="w-full bg-gray-800 text-white placeholder-gray-400 border-gray-700"
               />
-              <div className="flex gap-3">
-                <Button onClick={handleLogin} className="bg-cyan-500">
+              <div className="flex flex-row justify-center gap-2">
+                <Button
+                  onClick={handleLogin}
+                  className="bg-cyan-500 px-4 py-2 text-sm"
+                >
                   Enable Scanner
                 </Button>
-                <Button onClick={() => setStaffPassword("")} variant="ghost">
+                <Button
+                  onClick={() => setStaffPassword("")}
+                  variant="ghost"
+                  className="px-4 py-2 text-sm text-gray-200 border border-gray-700"
+                >
                   Clear
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm">Staff mode enabled</p>
-                  <p className="text-xs text-gray-500">
-                    Keep this page open while scanning
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      scanning ? stopScanner() : startScanner();
-                    }}
-                    className="bg-cyan-500"
-                  >
-                    {scanning ? "Stop Camera" : "Start Camera"}
-                  </Button>
-                  <Button onClick={handleLogout} variant="destructive">
-                    Logout
-                  </Button>
-                </div>
-              </div>
-
               {!cameraSupported && (
                 <p className="text-red-500 text-center mt-2">
                   Camera not supported or permission denied.
                 </p>
               )}
 
-              <div className="w-full h-96 bg-black flex items-center justify-center relative">
-                <div id="reader" className="w-full h-full">
-                  {/* html5-qrcode injects video here */}
-                </div>
+              <div className="w-full h-[500px] sm:h-[650px] bg-black rounded-xl overflow-hidden relative">
+                <div id="reader" className="w-full h-full" />
                 {!scanning && (
-                  <p className="absolute text-gray-500">
+                  <p className="absolute inset-0 flex items-center justify-center text-gray-400 text-center px-4">
                     Camera stopped. Click Start Camera to scan QR codes.
                   </p>
                 )}
               </div>
 
-              <style jsx>{`
-                /* Force video to fill container and maintain aspect ratio */
-                #reader video {
-                  width: 100% !important;
-                  height: 100% !important;
-                  object-fit: cover !important;
-                }
-                #reader canvas {
-                  width: 100% !important;
-                  height: 100% !important;
-                  object-fit: cover !important;
-                }
-              `}</style>
+              <div className="flex flex-row justify-center gap-3 mt-2">
+                <Button
+                  onClick={() => {
+                    scanning ? stopScanner() : startScanner();
+                  }}
+                  className="bg-cyan-500 px-3 py-1 text-sm"
+                >
+                  {scanning ? "Stop Camera" : "Start Camera"}
+                </Button>
+              </div>
 
               <div className="mt-3">
-                <p className="text-sm text-gray-600">Last scanned:</p>
-                <div className="mt-1 p-3 bg-gray-50">{lastScan ?? "—"}</div>
+                <p className="text-sm text-gray-300">Last scanned:</p>
+                <div className="mt-1 p-3 bg-gray-800 text-white rounded-lg break-words">
+                  {lastScan ?? "—"}
+                </div>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <style jsx>{`
+        #reader video,
+        #reader canvas {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
+      `}</style>
     </motion.div>
   );
 }
