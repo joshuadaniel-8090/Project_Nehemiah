@@ -1,0 +1,130 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase"; // you already have this set up
+import QRCode from "react-qr-code";
+
+interface Registration {
+  id: number;
+  name: string;
+  phone: string;
+  ticket_count: number;
+  raffle_numbers: string[];
+  attendance_present: boolean;
+  attendance_time: string | null;
+}
+
+export default function EventPage() {
+  const [phone, setPhone] = useState("");
+  const [registration, setRegistration] = useState<Registration | null>(null);
+  const [error, setError] = useState("");
+
+  // fetch user by phone
+  const handleLogin = async () => {
+    setError("");
+    setRegistration(null);
+
+    const { data, error } = await supabase
+      .from("registrations")
+      .select("*")
+      .eq("phone", phone)
+      .single();
+
+    if (error || !data) {
+      setError("No registration found for this phone number.");
+      return;
+    }
+
+    setRegistration(data);
+    subscribeToAttendance(data.id);
+  };
+
+  // real-time updates for attendance
+  const subscribeToAttendance = (id: number) => {
+    const channel = supabase
+      .channel(`attendance-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "registrations",
+          filter: `id=eq.${id}`,
+        },
+        (payload) => {
+          setRegistration((prev) =>
+            prev ? { ...prev, ...payload.new } : prev
+          );
+        }
+      )
+      .subscribe();
+  };
+
+  return (
+    <div className="max-w-xl mx-auto p-6">
+      {!registration ? (
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold text-center">Event Check-in</h1>
+          <input
+            type="text"
+            placeholder="Enter phone number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+          />
+          <button
+            onClick={handleLogin}
+            className="w-full bg-blue-600 text-white py-2 rounded"
+          >
+            View Ticket
+          </button>
+          {error && <p className="text-red-500 text-center">{error}</p>}
+        </div>
+      ) : (
+        <div className="space-y-6 text-center">
+          <h1 className="text-2xl font-bold">🎟️ Your Ticket</h1>
+
+          {/* QR Code */}
+          {!registration.attendance_present ? (
+            <QRCode
+              value={`https://project-nehemiah.vercel.app/api/mark-attendance?id=${registration.id}`}
+              size={180}
+            />
+          ) : (
+            <p className="text-green-600 text-xl font-bold">
+              ✅ Attendance Registered
+            </p>
+          )}
+
+          {/* Ticket Info */}
+          <div className="mt-4 space-y-2">
+            <p className="text-lg font-semibold">{registration.name}</p>
+            <p>
+              Tickets:{" "}
+              <span className="font-bold">{registration.ticket_count}</span>
+            </p>
+            <p>
+              Ticket Numbers:{" "}
+              {Array.isArray(registration.raffle_numbers)
+                ? registration.raffle_numbers.join(", ")
+                : String(registration.raffle_numbers)}
+            </p>
+          </div>
+
+          {/* Banner */}
+          <div
+            className={`p-3 rounded font-semibold ${
+              registration.attendance_present
+                ? "bg-green-100 text-green-700"
+                : "bg-yellow-100 text-yellow-700"
+            }`}
+          >
+            {registration.attendance_present
+              ? `Attendance marked at ${registration.attendance_time}`
+              : "⚠️ Attendance not registered yet"}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
