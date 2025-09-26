@@ -9,7 +9,7 @@ interface Registration {
   name: string;
   phone: string;
   ticket_count: number;
-  raffle_numbers: string[]; // always convert to array
+  raffle_numbers: string[];
   attendance_present: boolean;
   attendance_time: string | null;
 }
@@ -55,7 +55,34 @@ export default function EventPage() {
     markAttendance(normalizedData.id);
   };
 
-  // Real-time subscription for attendance updates
+  // Poll registration every 1 second to auto-refresh attendance
+  useEffect(() => {
+    if (!registration) return;
+
+    const interval = setInterval(async () => {
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("id", registration.id)
+        .single();
+
+      if (!error && data) {
+        const normalizedData: Registration = {
+          ...data,
+          raffle_numbers: Array.isArray(data.raffle_numbers)
+            ? data.raffle_numbers
+            : typeof data.raffle_numbers === "string"
+            ? JSON.parse(data.raffle_numbers)
+            : [],
+        };
+        setRegistration(normalizedData);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [registration?.id]);
+
+  // Real-time subscription for attendance updates (optional)
   useEffect(() => {
     if (!registration) return;
 
@@ -85,15 +112,13 @@ export default function EventPage() {
   // Call API to mark attendance
   const markAttendance = async (id: number) => {
     try {
-      const res = await fetch(
-        `/api/mark-attendance?id=${id}`,
-        { method: "GET" } // your API expects GET
-      );
+      const res = await fetch(`/api/mark-attendance?id=${id}`, {
+        method: "GET",
+      });
       if (!res.ok) {
-        const data = await res.json();
-        setError(data?.error || "Failed to mark attendance");
+        setError("Failed to mark attendance");
       }
-      // Success: real-time subscription will update the UI
+      // UI will auto-update via polling or real-time subscription
     } catch (err) {
       setError("Network error while marking attendance");
     }
