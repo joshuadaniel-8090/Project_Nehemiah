@@ -141,8 +141,8 @@ export default function EventPage() {
             </CardContent>
           </>
         ) : (
-          <CardContent className="text-center space-y-6">
-            <h1 className="text-2xl font-bold text-gray-100">
+          <CardContent className="text-center py-4 space-y-6">
+            <h1 className="text-4xl font-bold text-gray-100">
               🎟️ Project Nehemiah Ticket Details
             </h1>
 
@@ -165,16 +165,16 @@ export default function EventPage() {
 
             {/* Ticket Info */}
             <div className="mt-4 space-y-2 text-gray-200">
-              <p className="text-3xl text-cyan-400 font-semibold">
+              <p className="text-3xl py-6 text-cyan-400 font-semibold">
                 {registration.name}
               </p>
-              <p className="text-2xl">
+              <p className="text-2xl py-4">
                 Tickets:{" "}
                 <span className="text-2xl font-bold text-cyan-400">
                   {registration.ticket_count}
                 </span>
               </p>
-              <p className="text-2xl">
+              <p className="text-2xl py-4">
                 Ticket Numbers:{" "}
                 <span className="text-2xl text-cyan-400 font-bold">
                   {registration.raffle_numbers.length > 0
@@ -193,7 +193,22 @@ export default function EventPage() {
               }`}
             >
               {registration.attendance_present
-                ? `✅ Attendance marked at ${registration.attendance_time}`
+                ? `✅ Attendance marked at ${
+                    registration.attendance_time
+                      ? new Date(registration.attendance_time).toLocaleString(
+                          "en-IN",
+                          {
+                            timeZone: "Asia/Kolkata",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )
+                      : "Unknown time"
+                  }`
                 : "⚠️ Attendance not registered yet. Please show the qr code to the event staff."}
             </div>
           </CardContent>

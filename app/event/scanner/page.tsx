@@ -153,21 +153,28 @@ export default function StaffScannerPage() {
     >
       <Card className="w-full max-w-md sm:max-w-3xl mx-auto bg-gray-900 rounded-2xl shadow-xl">
         <CardHeader className="p-6 text-center sm:text-left">
-          <CardTitle className="text-3xl sm:text-2xl font-bold text-white">
-            Staff Scanner
-          </CardTitle>
+          <div className="flex items-center gap-4">
+            <CardTitle className="text-3xl sm:text-2xl font-bold text-white">
+              Staff Scanner
+            </CardTitle>
+
+            {isLoggedIn && (
+              <Button
+                onClick={handleLogout}
+                variant="destructive"
+                className="px-3 py-1 text-sm ml-20"
+              >
+                Logout
+              </Button>
+            )}
+          </div>
+
           <p className="text-gray-300 mt-2 text-sm sm:text-base">
             Log in with staff password and scan attendee QR codes to mark
             attendance.
           </p>
         </CardHeader>
-        <Button
-          onClick={handleLogout}
-          variant="destructive"
-          className="ml-[18rem] px-3 py-1 text-sm"
-        >
-          Logout
-        </Button>
+
         <CardContent className="p-4 sm:p-6 space-y-6">
           {!isLoggedIn ? (
             <div className="space-y-4">
