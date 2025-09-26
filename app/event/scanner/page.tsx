@@ -1,13 +1,16 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import BarcodeScanner from "react-qr-barcode-scanner";
+import {
+  Html5Qrcode,
+  Html5QrcodeScannerState,
+  Html5QrcodeCameraScanConfig,
+} from "html5-qrcode";
 
 export default function StaffScannerPage() {
   const [mounted, setMounted] = useState(false);
@@ -17,9 +20,12 @@ export default function StaffScannerPage() {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
+  const [cameraId, setCameraId] = useState<string | null>(null);
+  const html5QrRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     setMounted(true);
+
     if (typeof window !== "undefined") {
       const savedPw = sessionStorage.getItem("staff_pw");
       if (savedPw) {
@@ -48,7 +54,8 @@ export default function StaffScannerPage() {
     toast.success("Staff mode enabled. Ready to scan.");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    stopScanner();
     setIsLoggedIn(false);
     setStaffPassword("");
     setScanning(false);
@@ -56,26 +63,30 @@ export default function StaffScannerPage() {
     toast.success("Logged out");
   };
 
-  const onScan = async (data: string | null) => {
-    if (!data || data === lastScan) return;
-    setLastScan(data);
+  const onScan = async (decodedText: string) => {
+    if (!decodedText || decodedText === lastScan) return;
+    setLastScan(decodedText);
+
     try {
       let idParam: string | null = null;
       try {
-        const url = new URL(data);
+        const url = new URL(decodedText);
         idParam =
           url.searchParams.get("id") ||
           url.searchParams.get("ticketId") ||
-          data;
+          decodedText;
       } catch {
-        idParam = data;
+        idParam = decodedText;
       }
+
       if (!idParam) {
         toast.error("No valid ID found in QR");
         return;
       }
+
       const confirmed = confirm(`Mark attendance for ID: ${idParam}?`);
       if (!confirmed) return;
+
       setIsProcessing(true);
       const res = await fetch(
         `/api/mark-attendance?id=${encodeURIComponent(idParam)}`,
@@ -87,7 +98,9 @@ export default function StaffScannerPage() {
           },
         }
       );
+
       const json = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         toast.error(json?.error || `Failed (${res.status})`);
       } else {
@@ -100,9 +113,50 @@ export default function StaffScannerPage() {
     }
   };
 
-  const onError = (err: any) => {
-    console.error(err);
-    toast.error("Camera error: " + (err?.message || String(err)));
+  const startScanner = async () => {
+    if (!Html5Qrcode.getCameras) {
+      toast.error("Camera not supported on this device/browser");
+      setCameraSupported(false);
+      return;
+    }
+
+    try {
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        toast.error("No camera found");
+        setCameraSupported(false);
+        return;
+      }
+      const rearCamera =
+        cameras.find((c) => c.label.toLowerCase().includes("back")) ||
+        cameras[0];
+      setCameraId(rearCamera.id);
+
+      html5QrRef.current = new Html5Qrcode("reader");
+
+      await html5QrRef.current.start(
+        rearCamera.id,
+        { fps: 10, qrbox: 250 } as Html5QrcodeCameraScanConfig,
+        onScan,
+        (err) => console.warn("QR scan error:", err)
+      );
+
+      setCameraSupported(true);
+      setScanning(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("Camera permission denied or unavailable");
+      setCameraSupported(false);
+    }
+  };
+
+  const stopScanner = async () => {
+    if (html5QrRef.current) {
+      await html5QrRef.current.stop().catch(() => {});
+      html5QrRef.current.clear();
+      html5QrRef.current = null;
+      setScanning(false);
+    }
   };
 
   return (
@@ -149,7 +203,9 @@ export default function StaffScannerPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => setScanning((s) => !s)}
+                    onClick={() => {
+                      scanning ? stopScanner() : startScanner();
+                    }}
                     className="bg-cyan-500"
                   >
                     {scanning ? "Stop Camera" : "Start Camera"}
@@ -159,23 +215,22 @@ export default function StaffScannerPage() {
                   </Button>
                 </div>
               </div>
-              {scanning ? (
-                <div className="w-full h-96 bg-black flex items-center justify-center">
-                  <BarcodeScanner
-                    facingMode="environment"
-                    onUpdate={(err, result) => {
-                      if (result) onScan(result.getText());
-                      else onError(err);
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="h-96 flex items-center justify-center">
+
+              {!cameraSupported && (
+                <p className="text-red-500 text-center mt-2">
+                  Camera not supported or permission denied.
+                </p>
+              )}
+
+              <div className="w-full h-96 bg-black flex items-center justify-center">
+                <div id="reader" className="w-full h-full"></div>
+                {!scanning && (
                   <p className="text-gray-500">
                     Camera stopped. Click Start Camera to scan QR codes.
                   </p>
-                </div>
-              )}
+                )}
+              </div>
+
               <div className="mt-3">
                 <p className="text-sm text-gray-600">Last scanned:</p>
                 <div className="mt-1 p-3 bg-gray-50">{lastScan ?? "—"}</div>
