@@ -222,14 +222,30 @@ export default function StaffScannerPage() {
                 </p>
               )}
 
-              <div className="w-full h-96 bg-black flex items-center justify-center">
-                <div id="reader" className="w-full h-full"></div>
+              <div className="w-full h-96 bg-black flex items-center justify-center relative">
+                <div id="reader" className="w-full h-full">
+                  {/* html5-qrcode injects video here */}
+                </div>
                 {!scanning && (
-                  <p className="text-gray-500">
+                  <p className="absolute text-gray-500">
                     Camera stopped. Click Start Camera to scan QR codes.
                   </p>
                 )}
               </div>
+
+              <style jsx>{`
+                /* Force video to fill container and maintain aspect ratio */
+                #reader video {
+                  width: 100% !important;
+                  height: 100% !important;
+                  object-fit: cover !important;
+                }
+                #reader canvas {
+                  width: 100% !important;
+                  height: 100% !important;
+                  object-fit: cover !important;
+                }
+              `}</style>
 
               <div className="mt-3">
                 <p className="text-sm text-gray-600">Last scanned:</p>

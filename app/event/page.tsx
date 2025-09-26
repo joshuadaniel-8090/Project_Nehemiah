@@ -165,16 +165,16 @@ export default function EventPage() {
 
             {/* Ticket Info */}
             <div className="mt-4 space-y-2 text-gray-200">
-              <p className="text-2xl text-cyan-400 font-semibold">
+              <p className="text-3xl text-cyan-400 font-semibold">
                 {registration.name}
               </p>
               <p className="text-2xl">
                 Tickets:{" "}
-                <span className="text-xl font-bold text-cyan-400">
+                <span className="text-2xl font-bold text-cyan-400">
                   {registration.ticket_count}
                 </span>
               </p>
-              <p className="text-xl">
+              <p className="text-2xl">
                 Ticket Numbers:{" "}
                 <span className="text-2xl text-cyan-400 font-bold">
                   {registration.raffle_numbers.length > 0
