@@ -4,15 +4,6 @@ import { supabase } from "@/lib/supabase";
 
 export const runtime = "nodejs"; // ensure server-side
 
-/**
- * Expected:
- *  - Header: x-staff-secret: <STAFF_PASSWORD>
- *  - STAFF_PASSWORD set in .env: STAFF_PASSWORD=Nehemiah2025!
- *
- * Query:
- *  - id=<userId> (required)
- *  - fetchName=true (optional) → only returns user's name
- */
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);

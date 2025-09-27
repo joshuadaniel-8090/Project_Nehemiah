@@ -56,8 +56,15 @@ export default function StaffScannerPage() {
   };
 
   const onScan = async (decodedText: string) => {
-    if (!decodedText || decodedText === lastScan) return;
+    if (!decodedText || decodedText === lastScan || isProcessing) return;
+
     setLastScan(decodedText);
+    setIsProcessing(true); // prevent further scans
+
+    // Pause the scanner immediately
+    if (html5QrRef.current) {
+      await html5QrRef.current.pause(true); // true = pause scanning, keep video stream
+    }
 
     try {
       let idParam: string | null = null;
@@ -76,40 +83,33 @@ export default function StaffScannerPage() {
         return;
       }
 
-      // Fetch user name first
+      // Fetch user name without marking attendance
       const resUser = await fetch(
-        `/api/mark-attendance?id=${encodeURIComponent(idParam)}&fetchName=true`,
+        `/api/mark-attendance?id=${idParam}&fetchName=true`,
         {
-          headers: {
-            "x-staff-secret": staffPassword.trim(), // ✅ send staff input
-          },
+          headers: { "x-staff-secret": staffPassword },
         }
       );
 
       if (!resUser.ok) {
         const text = await resUser.text();
-        console.error("API returned error:", text);
         toast.error(`Unable to fetch user info (${resUser.status})`);
+        console.error(text);
         return;
       }
 
       const userData = await resUser.json();
-      if (!userData?.name) {
-        toast.error("API returned invalid data");
-        return;
-      }
 
       const confirmed = confirm(`Mark attendance for: ${userData.name}?`);
-      if (!confirmed) return;
 
-      setIsProcessing(true);
+      if (!confirmed) return;
 
       const res = await fetch(
         `/api/mark-attendance?id=${encodeURIComponent(idParam)}`,
         {
           method: "GET",
           headers: {
-            "x-staff-secret": staffPassword.trim(), // ✅ same header for marking
+            "x-staff-secret": staffPassword,
             "Content-Type": "application/json",
           },
         }
@@ -122,6 +122,12 @@ export default function StaffScannerPage() {
       toast.error(err?.message || "Scan processing error");
     } finally {
       setIsProcessing(false);
+      setLastScan(null); // allow scanning same QR later if needed
+
+      // Resume scanner after processing
+      if (html5QrRef.current) {
+        await html5QrRef.current.resume();
+      }
     }
   };
 
