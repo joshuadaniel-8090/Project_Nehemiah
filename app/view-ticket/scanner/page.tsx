@@ -57,8 +57,10 @@ export default function StaffScannerPage() {
   const onScan = async (decodedText: string) => {
     if (!decodedText || decodedText === lastScan) return;
     setLastScan(decodedText);
+
     try {
       let idParam: string | null = null;
+
       try {
         const url = new URL(decodedText);
         idParam =
@@ -74,10 +76,22 @@ export default function StaffScannerPage() {
         return;
       }
 
-      const confirmed = confirm(`Mark attendance for ID: ${idParam}?`);
+      // Fetch user name from backend
+      const resUser = await fetch(
+        `/api/get-user?id=${encodeURIComponent(idParam)}`
+      );
+      const userData = await resUser.json();
+
+      if (!resUser.ok || !userData?.name) {
+        toast.error("Unable to fetch user details");
+        return;
+      }
+
+      const confirmed = confirm(`Mark attendance for: ${userData.name}?`);
       if (!confirmed) return;
 
       setIsProcessing(true);
+
       const res = await fetch(
         `/api/mark-attendance?id=${encodeURIComponent(idParam)}`,
         {

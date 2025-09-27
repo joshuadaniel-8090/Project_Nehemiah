@@ -226,7 +226,9 @@ export default function RegistrationForm() {
             </p>
             <Button
               onClick={() => setShowUPIAlert(false)}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+               transform transition-all duration-300 hover:scale-105"
             >
               Got it
             </Button>
@@ -390,13 +392,17 @@ export default function RegistrationForm() {
               </div>
             </div>
 
-            <Button
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white flex items-center justify-center"
-              onClick={() => validateStep1() && setShowPaymentPage(true)}
-            >
-              Proceed to Pay (₹{formData.ticketCount * TICKET_PRICE})
-              <ChevronRight className="ml-2 w-5 h-5" />
-            </Button>
+            <div className="flex justify-center mt-8">
+              <Button
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+               transform transition-all duration-300 hover:scale-105 flex items-center"
+                onClick={() => validateStep1() && setShowPaymentPage(true)}
+              >
+                Proceed to Pay (₹{formData.ticketCount * TICKET_PRICE})
+                <ChevronRight className="ml-2 w-5 h-5" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -479,17 +485,21 @@ export default function RegistrationForm() {
               />
             </div>
 
-            <Button
-              onClick={() => setShowConfirmPopup(true)}
-              disabled={isLoading || !formData.upiName.trim()}
-              className={`w-full text-white rounded-xl ${
-                isLoading || !formData.upiName.trim()
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-cyan-500 hover:bg-cyan-600"
-              }`}
-            >
-              {isLoading ? "Submitting..." : "Complete Registration"}
-            </Button>
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={() => setShowConfirmPopup(true)}
+                disabled={isLoading || !formData.upiName.trim()}
+                className={`bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+      text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+      transform transition-all duration-300 hover:scale-105 flex items-center justify-center ${
+        isLoading || !formData.upiName.trim()
+          ? "bg-gray-500 cursor-not-allowed"
+          : "bg-cyan-500 hover:bg-cyan-600"
+      }`}
+              >
+                {isLoading ? "Submitting..." : "Complete Registration"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

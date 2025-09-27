@@ -200,6 +200,7 @@ export default function ProjectNehemiahLanding() {
         </section>
 
         {/* Call to Action */}
+        {/* Call to Action */}
         <section className="py-10 px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -212,15 +213,25 @@ export default function ProjectNehemiahLanding() {
               Join the Mission
             </h2>
 
-            <p className="text-lg md:text-xl text-gray-200 leading-relaxed tracking-wide">
+            <p className="text-lg md:text-xl text-gray-200 leading-relaxed tracking-wide mb-8">
               Be part of this{" "}
               <span className="text-cyan-300 font-semibold">
                 divine journey
               </span>
               . Your support will help us secure and dedicate a building as a
-              church a place for prayer, worship and peace, bringing hope and
+              church — a place for prayer, worship and peace, bringing hope and
               faith to generations yet to come.
             </p>
+
+            {/* View Ticket Button */}
+            <Button
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+               transform transition-all duration-300 hover:scale-105"
+              onClick={() => (window.location.href = "/view-ticket")}
+            >
+              🎟️ View My Ticket
+            </Button>
           </motion.div>
         </section>
         <motion.section
@@ -228,10 +239,26 @@ export default function ProjectNehemiahLanding() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="max-w-3xl mx-auto mb-32 px-6"
+          className="max-w-3xl mx-auto mb-12 px-6"
         >
           <RegistrationForm />
+
+          {/* View Ticket Button below registration form */}
+          <div className="mt-12 text-center space-y-4">
+            <p className="text-gray-300 text-lg font-medium tracking-wide">
+              Already Registered?
+            </p>
+            <Button
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+               transform transition-all duration-300 hover:scale-105"
+              onClick={() => (window.location.href = "/view-ticket")}
+            >
+              🎟️ View My Ticket
+            </Button>
+          </div>
         </motion.section>
+
         {/* Footer */}
         <footer className="bg-black/80 py-6 text-center text-sm text-gray-500 space-y-2">
           <p>

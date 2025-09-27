@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import QRCode from "react-qr-code";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { CheckCircle } from "lucide-react";
+import Image from "next/image";
 
 interface Registration {
   id: number;
@@ -36,7 +36,7 @@ export default function EventPage() {
       .from("registrations")
       .select("*")
       .eq("phone", phone)
-      .maybeSingle(); // ✅ use maybeSingle instead of single()
+      .maybeSingle();
 
     if (error) {
       const errorMsg = `Database error: ${error.message}`;
@@ -53,7 +53,6 @@ export default function EventPage() {
       return;
     }
 
-    // Ensure raffle_numbers is always an array
     const normalizedData: Registration = {
       ...data,
       raffle_numbers: Array.isArray(data.raffle_numbers)
@@ -102,21 +101,34 @@ export default function EventPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen flex items-center bg-black/90 justify-center p-6"
+      className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden"
     >
-      <Card className="w-full max-w-md mx-auto bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl">
+      {/* Background image */}
+      <Image
+        src="/file.svg"
+        alt="Church background"
+        width={1920}
+        height={1080}
+        className="fixed inset-0 w-full h-full object-cover opacity-30 -z-10"
+      />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 -z-10"></div>
+      {/* <div className="absolute inset-0 bg-[url('/bg.webp')] bg-cover bg-center" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" /> */}
+
+      {/* Foreground card */}
+      <Card className="relative z-10 w-full max-w-md mx-auto bg-black/50 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl text-gray-100">
         {!registration ? (
           <>
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                Event Check-in
+                Attendance Registration
               </CardTitle>
               <p className="text-gray-300 mt-2">
                 Enter your phone number to view your ticket
               </p>
             </CardHeader>
 
-            <CardContent className="space-y-6 text-gray-100">
+            <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="phone">
                   Phone Number <span className="text-cyan-400">*</span>
@@ -130,51 +142,53 @@ export default function EventPage() {
                 />
               </div>
 
-              <Button
-                onClick={handleLogin}
-                className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
-              >
-                View Ticket
-              </Button>
-
-              {/* {error && <p className="text-red-500 text-center">{error}</p>} */}
+              <div className="flex justify-center mt-6">
+                <Button
+                  onClick={handleLogin}
+                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
+    text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+    transform transition-all duration-300 hover:scale-105"
+                >
+                  View Ticket
+                </Button>
+              </div>
             </CardContent>
           </>
         ) : (
-          <CardContent className="text-center py-4 space-y-6">
-            <h1 className="text-4xl font-bold text-gray-100">
+          <CardContent className="text-center py-6 space-y-8">
+            <h1 className="text-3xl font-bold text-gray-100">
               🎟️ Project Nehemiah Ticket Details
             </h1>
 
             {/* QR Code */}
             {!registration.attendance_present ? (
-              <div className="p-4 bg-white border border-white rounded-xl inline-block">
+              <div className="p-4 bg-white border border-white/20 rounded-xl inline-block shadow-lg">
                 <QRCode
                   value={`https://project-nehemiah.vercel.app/api/mark-attendance?id=${registration.id}`}
-                  size={180}
+                  size={200}
                 />
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <CheckCircle className="w-16 h-16 text-green-400 mb-2" />
-                <p className="text-green-400 text-lg font-bold">
+                <CheckCircle className="w-20 h-20 text-green-400 mb-2" />
+                <p className="text-green-400 text-xl font-bold">
                   Attendance Registered
                 </p>
               </div>
             )}
 
             {/* Ticket Info */}
-            <div className="mt-4 space-y-2 text-gray-200">
-              <p className="text-3xl py-6 text-cyan-400 font-semibold">
+            <div className="mt-4 space-y-3 text-gray-200">
+              <p className="text-3xl py-2 text-cyan-400 font-semibold">
                 {registration.name}
               </p>
-              <p className="text-2xl py-4">
+              <p className="text-2xl">
                 Tickets:{" "}
                 <span className="text-2xl font-bold text-cyan-400">
                   {registration.ticket_count}
                 </span>
               </p>
-              <p className="text-2xl py-4">
+              <p className="text-2xl">
                 Ticket Numbers:{" "}
                 <span className="text-2xl text-cyan-400 font-bold">
                   {registration.raffle_numbers.length > 0
@@ -186,7 +200,7 @@ export default function EventPage() {
 
             {/* Status Banner */}
             <div
-              className={`p-3 rounded-xl font-semibold text-sm ${
+              className={`p-4 rounded-xl font-semibold text-lg shadow-md ${
                 registration.attendance_present
                   ? "bg-green-100 text-green-700"
                   : "bg-yellow-100 text-yellow-700"
@@ -209,7 +223,7 @@ export default function EventPage() {
                         )
                       : "Unknown time"
                   }`
-                : "⚠️ Attendance not registered yet. Please show the qr code to the event staff."}
+                : "⚠️ Attendance not registered yet. Please show the QR code to the event staff."}
             </div>
           </CardContent>
         )}
