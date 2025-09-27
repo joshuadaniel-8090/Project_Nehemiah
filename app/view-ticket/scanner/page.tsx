@@ -16,7 +16,6 @@ export default function StaffScannerPage() {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
-
   const html5QrRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
@@ -37,13 +36,33 @@ export default function StaffScannerPage() {
 
   if (!mounted) return null;
 
-  const handleLogin = () => {
+  // ✅ Login now calls backend to verify staff password
+  const handleLogin = async () => {
     if (!staffPassword.trim()) {
       toast.error("Enter staff password");
       return;
     }
-    setIsLoggedIn(true);
-    toast.success("Staff mode enabled. Ready to scan.");
+
+    try {
+      const res = await fetch("/api/verify-staff-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: staffPassword }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Login failed");
+        return;
+      }
+
+      setIsLoggedIn(true);
+      sessionStorage.setItem("staff_pw", staffPassword);
+      toast.success("Staff mode enabled. Ready to scan.");
+    } catch (err: any) {
+      toast.error(err?.message || "Login error");
+    }
   };
 
   const handleLogout = async () => {
@@ -59,11 +78,11 @@ export default function StaffScannerPage() {
     if (!decodedText || decodedText === lastScan || isProcessing) return;
 
     setLastScan(decodedText);
-    setIsProcessing(true); // prevent further scans
+    setIsProcessing(true);
 
-    // Pause the scanner immediately
+    // Pause scanner immediately
     if (html5QrRef.current) {
-      await html5QrRef.current.pause(true); // true = pause scanning, keep video stream
+      await html5QrRef.current.pause(true);
     }
 
     try {
@@ -83,7 +102,6 @@ export default function StaffScannerPage() {
         return;
       }
 
-      // Fetch user name without marking attendance
       const resUser = await fetch(
         `/api/mark-attendance?id=${idParam}&fetchName=true`,
         {
@@ -101,7 +119,6 @@ export default function StaffScannerPage() {
       const userData = await resUser.json();
 
       const confirmed = confirm(`Mark attendance for: ${userData.name}?`);
-
       if (!confirmed) return;
 
       const res = await fetch(
@@ -124,7 +141,6 @@ export default function StaffScannerPage() {
       setIsProcessing(false);
       setLastScan(null); // allow scanning same QR later if needed
 
-      // Resume scanner after processing
       if (html5QrRef.current) {
         await html5QrRef.current.resume();
       }
@@ -137,6 +153,7 @@ export default function StaffScannerPage() {
       setCameraSupported(false);
       return;
     }
+
     try {
       const cameras = await Html5Qrcode.getCameras();
       if (!cameras || cameras.length === 0) {
