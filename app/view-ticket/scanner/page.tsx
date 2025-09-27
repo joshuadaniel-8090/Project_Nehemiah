@@ -16,6 +16,7 @@ export default function StaffScannerPage() {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
+
   const html5QrRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
@@ -60,7 +61,6 @@ export default function StaffScannerPage() {
 
     try {
       let idParam: string | null = null;
-
       try {
         const url = new URL(decodedText);
         idParam =
@@ -76,14 +76,26 @@ export default function StaffScannerPage() {
         return;
       }
 
-      // Fetch user name from backend
+      // Fetch user name first
       const resUser = await fetch(
-        `/api/get-user?id=${encodeURIComponent(idParam)}`
+        `/api/mark-attendance?id=${encodeURIComponent(idParam)}&fetchName=true`,
+        {
+          headers: {
+            "x-staff-secret": staffPassword.trim(), // ✅ send staff input
+          },
+        }
       );
-      const userData = await resUser.json();
 
-      if (!resUser.ok || !userData?.name) {
-        toast.error("Unable to fetch user details");
+      if (!resUser.ok) {
+        const text = await resUser.text();
+        console.error("API returned error:", text);
+        toast.error(`Unable to fetch user info (${resUser.status})`);
+        return;
+      }
+
+      const userData = await resUser.json();
+      if (!userData?.name) {
+        toast.error("API returned invalid data");
         return;
       }
 
@@ -97,14 +109,13 @@ export default function StaffScannerPage() {
         {
           method: "GET",
           headers: {
-            "x-staff-secret": staffPassword,
+            "x-staff-secret": staffPassword.trim(), // ✅ same header for marking
             "Content-Type": "application/json",
           },
         }
       );
 
       const json = await res.json().catch(() => ({}));
-
       if (!res.ok) toast.error(json?.error || `Failed (${res.status})`);
       else toast.success(json?.message || "Attendance marked successfully");
     } catch (err: any) {
@@ -120,7 +131,6 @@ export default function StaffScannerPage() {
       setCameraSupported(false);
       return;
     }
-
     try {
       const cameras = await Html5Qrcode.getCameras();
       if (!cameras || cameras.length === 0) {
@@ -132,8 +142,8 @@ export default function StaffScannerPage() {
       const rearCamera =
         cameras.find((c) => c.label.toLowerCase().includes("back")) ||
         cameras[0];
-      html5QrRef.current = new Html5Qrcode("reader");
 
+      html5QrRef.current = new Html5Qrcode("reader");
       await html5QrRef.current.start(
         rearCamera.id,
         { fps: 10, qrbox: 300 } as Html5QrcodeCameraScanConfig,
@@ -171,7 +181,6 @@ export default function StaffScannerPage() {
             <CardTitle className="text-3xl sm:text-2xl font-bold text-white">
               Staff Scanner
             </CardTitle>
-
             {isLoggedIn && (
               <Button
                 onClick={handleLogout}
@@ -182,7 +191,6 @@ export default function StaffScannerPage() {
               </Button>
             )}
           </div>
-
           <p className="text-gray-300 mt-2 text-sm sm:text-base">
             Log in with staff password and scan attendee QR codes to mark
             attendance.
@@ -222,7 +230,6 @@ export default function StaffScannerPage() {
                   Camera not supported or permission denied.
                 </p>
               )}
-
               <div className="w-full h-[500px] sm:h-[650px] bg-black rounded-xl overflow-hidden relative">
                 <div id="reader" className="w-full h-full" />
                 {!scanning && (
@@ -231,7 +238,6 @@ export default function StaffScannerPage() {
                   </p>
                 )}
               </div>
-
               <div className="flex flex-row justify-center gap-3 mt-2">
                 <Button
                   onClick={() => {
@@ -242,7 +248,6 @@ export default function StaffScannerPage() {
                   {scanning ? "Stop Camera" : "Start Camera"}
                 </Button>
               </div>
-
               <div className="mt-3">
                 <p className="text-sm text-gray-300">Last scanned:</p>
                 <div className="mt-1 p-3 bg-gray-800 text-white rounded-lg break-words">

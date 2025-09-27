@@ -2,23 +2,31 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export const runtime = "nodejs"; // make sure this runs on server
+export const runtime = "nodejs"; // ensure server-side
 
 /**
- * Expected: request to include header: x-staff-secret: <STAFF_PASSWORD>
- * STAFF_PASSWORD must be set in your environment variables:
- *   STAFF_PASSWORD=someStrongPassword
+ * Expected:
+ *  - Header: x-staff-secret: <STAFF_PASSWORD>
+ *  - STAFF_PASSWORD set in .env: STAFF_PASSWORD=Nehemiah2025!
  *
- * QR can still contain id (e.g. ?id=123) — but the request must include the header.
+ * Query:
+ *  - id=<userId> (required)
+ *  - fetchName=true (optional) → only returns user's name
  */
-
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
+    const fetchName = url.searchParams.get("fetchName") === "true";
+
+    // Read header
     const staffSecretHeader =
       req.headers.get("x-staff-secret") || req.headers.get("authorization");
 
+    // Debug log: see what the backend receives
+    console.log("Received x-staff-secret header:", staffSecretHeader);
+
+    // Read server-side secret
     const staffSecret = process.env.STAFF_PASSWORD;
     if (!staffSecret) {
       return new NextResponse(
@@ -27,7 +35,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // validate header
+    // Validate header
     if (!staffSecretHeader) {
       return new NextResponse(
         JSON.stringify({ error: "Missing staff authorization header" }),
@@ -35,12 +43,14 @@ export async function GET(req: Request) {
       );
     }
 
-    // if client sent Authorization: Bearer <secret>, accept both forms
     const headerVal = staffSecretHeader.startsWith("Bearer ")
       ? staffSecretHeader.split(" ")[1]
       : staffSecretHeader;
 
+    console.log("Comparing headerVal:", headerVal, "with server secret");
+
     if (headerVal !== staffSecret) {
+      console.log("Unauthorized access attempt!");
       return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -54,7 +64,35 @@ export async function GET(req: Request) {
       );
     }
 
-    // update attendance - use id (assumed numeric id)
+    // If only fetching name
+    if (fetchName) {
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("name")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) {
+        return new NextResponse(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (!data) {
+        return new NextResponse(JSON.stringify({ error: "User not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      return new NextResponse(JSON.stringify({ name: data.name }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Otherwise, mark attendance
     const { error } = await supabase
       .from("registrations")
       .update({
