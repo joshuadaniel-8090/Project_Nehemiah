@@ -222,16 +222,6 @@ export default function ProjectNehemiahLanding() {
               church — a place for prayer, worship and peace, bringing hope and
               faith to generations yet to come.
             </p>
-
-            {/* View Ticket Button */}
-            {/* <Button
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
-               transform transition-all duration-300 hover:scale-105"
-              onClick={() => (window.location.href = "/view-ticket")}
-            >
-              🎟️ View My Ticket
-            </Button> */}
           </motion.div>
         </section>
         <motion.section
@@ -244,19 +234,19 @@ export default function ProjectNehemiahLanding() {
           <RegistrationForm />
 
           {/* View Ticket Button below registration form */}
-          <div className="mt-12 text-center space-y-4">
+          {/* <div className="mt-12 text-center space-y-4">
             <p className="text-gray-300 text-lg font-medium tracking-wide">
               Already Registered?
             </p>
-            {/* <Button
+            <Button
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
                text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
                transform transition-all duration-300 hover:scale-105"
               onClick={() => (window.location.href = "/view-ticket")}
             >
-              🎟️ View My Ticket
-            </Button> */}
-          </div>
+              🎟️ View Ticket
+            </Button>
+          </div> */}
         </motion.section>
 
         {/* Footer */}
