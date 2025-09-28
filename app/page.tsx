@@ -224,14 +224,14 @@ export default function ProjectNehemiahLanding() {
             </p>
 
             {/* View Ticket Button */}
-            <Button
+            {/* <Button
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
                text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
                transform transition-all duration-300 hover:scale-105"
               onClick={() => (window.location.href = "/view-ticket")}
             >
               🎟️ View My Ticket
-            </Button>
+            </Button> */}
           </motion.div>
         </section>
         <motion.section
@@ -248,14 +248,14 @@ export default function ProjectNehemiahLanding() {
             <p className="text-gray-300 text-lg font-medium tracking-wide">
               Already Registered?
             </p>
-            <Button
+            {/* <Button
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
                text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
                transform transition-all duration-300 hover:scale-105"
               onClick={() => (window.location.href = "/view-ticket")}
             >
               🎟️ View My Ticket
-            </Button>
+            </Button> */}
           </div>
         </motion.section>
 
