@@ -234,7 +234,7 @@ export default function ProjectNehemiahLanding() {
           <RegistrationForm />
 
           {/* View Ticket Button below registration form */}
-          {/* <div className="mt-12 text-center space-y-4">
+          <div className="mt-12 text-center space-y-4">
             <p className="text-gray-300 text-lg font-medium tracking-wide">
               Already Registered?
             </p>
@@ -246,7 +246,7 @@ export default function ProjectNehemiahLanding() {
             >
               🎟️ View Ticket
             </Button>
-          </div> */}
+          </div>
         </motion.section>
 
         {/* Footer */}

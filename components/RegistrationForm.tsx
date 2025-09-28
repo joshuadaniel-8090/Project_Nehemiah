@@ -169,7 +169,7 @@ export default function RegistrationForm() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen flex items-center justify-center p-4"
+        className="flex items-center justify-center p-4"
       >
         <Card className="w-full max-w-md mx-auto bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl">
           <CardContent className="text-center p-8">

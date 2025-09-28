@@ -121,7 +121,7 @@ export default function EventPage() {
           <>
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                Attendance Registration
+                View Your Ticket
               </CardTitle>
               <p className="text-gray-300 mt-2">
                 Enter your phone number to view your ticket
@@ -161,7 +161,8 @@ export default function EventPage() {
             </h1>
 
             {/* QR Code */}
-            {!registration.attendance_present ? (
+            {/* uncomment for attendance status */}
+            {/* {!registration.attendance_present ? (
               <div className="p-4 bg-white border border-white/20 rounded-xl inline-block shadow-lg">
                 <QRCode
                   value={`https://project-nehemiah.vercel.app/api/mark-attendance?id=${registration.id}`}
@@ -175,7 +176,7 @@ export default function EventPage() {
                   Attendance Registered
                 </p>
               </div>
-            )}
+            )} */}
 
             {/* Ticket Info */}
             <div className="mt-4 space-y-3 text-gray-200">
@@ -199,7 +200,8 @@ export default function EventPage() {
             </div>
 
             {/* Status Banner */}
-            <div
+            {/* uncomment for attendance status */}
+            {/* <div
               className={`p-4 rounded-xl font-semibold text-lg shadow-md ${
                 registration.attendance_present
                   ? "bg-green-100 text-green-700"
@@ -224,7 +226,7 @@ export default function EventPage() {
                       : "Unknown time"
                   }`
                 : "⚠️ Attendance not registered yet. Please show the QR code to the event staff."}
-            </div>
+            </div> */}
           </CardContent>
         )}
       </Card>
