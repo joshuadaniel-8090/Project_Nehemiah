@@ -131,7 +131,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    const message = `🎉 *Registration Verified!* 🎉
+    const message = `🎉 *Project Nehemiah Ticket Details* 🎉
 
 Hey *${registration.name}*,
 
