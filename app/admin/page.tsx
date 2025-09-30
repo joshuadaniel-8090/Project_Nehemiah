@@ -147,7 +147,7 @@ Your registration for *${
 
 ✨ Thanks for participating in *Project Nehemiah*!  
 You can view your tickets here:  
-🔗 https://project-nehemiah.vercel.app/view-tickets`;
+🔗 https://project-nehemiah.vercel.app/view-ticket`;
 
     navigator.clipboard
       .writeText(message)
