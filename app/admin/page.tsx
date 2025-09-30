@@ -131,13 +131,23 @@ export default function AdminDashboard() {
       return;
     }
 
-    const message = `Hey *${registration.name}*, your registration for *${
+    const message = `🎉 *Registration Verified!* 🎉
+
+Hey *${registration.name}*,
+
+Your registration for *${
       registration.ticket_count || 1
-    }* ticket(s) is verified! 🎉 Your ticket numbers: *${
+    }* ticket(s) has been successfully verified. ✅
+
+🎟️ *Ticket Numbers:* ${
       Array.isArray(registration.raffle_numbers)
         ? registration.raffle_numbers.join(", ")
         : registration.raffle_numbers
-    }*. Thanks for participating!`;
+    }
+
+✨ Thanks for participating in *Project Nehemiah*!  
+You can view your tickets here:  
+🔗 https://project-nehemiah.vercel.app/view-tickets`;
 
     navigator.clipboard
       .writeText(message)
