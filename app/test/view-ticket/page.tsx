@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import QRCode from "react-qr-code";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { CheckCircle } from "lucide-react";
 import Image from "next/image";
+import Confetti from "react-confetti";
 
 interface Registration {
   id: number;
@@ -26,6 +27,10 @@ export default function EventPage() {
   const [phone, setPhone] = useState("");
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [error, setError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Keep track of last attendance status to prevent retriggers
+  const lastAttendanceStatus = useRef<boolean | null>(null);
 
   // Fetch user by phone
   const handleLogin = async () => {
@@ -53,6 +58,15 @@ export default function EventPage() {
       return;
     }
 
+    // ✅ Extra check for Status column
+    if (data.status !== "verified") {
+      const errorMsg =
+        "Your ticket is not yet verified. Please wait until it gets approved.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+
     const normalizedData: Registration = {
       ...data,
       raffle_numbers: Array.isArray(data.raffle_numbers)
@@ -63,6 +77,7 @@ export default function EventPage() {
     };
 
     setRegistration(normalizedData);
+    lastAttendanceStatus.current = normalizedData.attendance_present;
   };
 
   // Poll registration every 1s for auto-refresh
@@ -91,6 +106,18 @@ export default function EventPage() {
             : [],
         };
         setRegistration(normalizedData);
+
+        // 🎉 Trigger success animation only once when attendance changes to true
+        if (
+          normalizedData.attendance_present &&
+          lastAttendanceStatus.current !== true
+        ) {
+          setShowSuccess(true);
+          lastAttendanceStatus.current = true;
+
+          // Close after 7 seconds
+          setTimeout(() => setShowSuccess(false), 7000);
+        }
       }
     }, 1000);
 
@@ -112,8 +139,6 @@ export default function EventPage() {
         className="fixed inset-0 w-full h-full object-cover opacity-30 -z-10"
       />
       <div className="fixed inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 -z-10"></div>
-      {/* <div className="absolute inset-0 bg-[url('/bg.webp')] bg-cover bg-center" />
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" /> */}
 
       {/* Foreground card */}
       <Card className="relative z-10 w-full max-w-md mx-auto bg-black/50 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl text-gray-100">
@@ -127,7 +152,6 @@ export default function EventPage() {
                 Enter your phone number to view your ticket
               </p>
             </CardHeader>
-
             <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="phone">
@@ -141,13 +165,12 @@ export default function EventPage() {
                   className="bg-black/30 text-gray-100 placeholder-gray-400 border border-white/20 focus:border-cyan-400 focus:ring-0"
                 />
               </div>
-
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
                   className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-    text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
-    transform transition-all duration-300 hover:scale-105"
+                    text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
+                    transform transition-all duration-300 hover:scale-105"
                 >
                   View Ticket
                 </Button>
@@ -160,8 +183,7 @@ export default function EventPage() {
               🎟️ Project Nehemiah Ticket Details
             </h1>
 
-            {/* QR Code */}
-            {/* uncomment for attendance status */}
+            {/* QR Code or Success Check */}
             {!registration.attendance_present ? (
               <div className="p-4 bg-white border border-white/20 rounded-xl inline-block shadow-lg">
                 <QRCode
@@ -200,7 +222,6 @@ export default function EventPage() {
             </div>
 
             {/* Status Banner */}
-            {/* uncomment for attendance status */}
             <div
               className={`p-4 rounded-xl font-semibold text-lg shadow-md ${
                 registration.attendance_present
@@ -230,6 +251,41 @@ export default function EventPage() {
           </CardContent>
         )}
       </Card>
+
+      {/* 🎉 Success Overlay */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            className="fixed inset-0 flex flex-col items-center justify-center bg-black/80 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Confetti numberOfPieces={250} recycle={false} />
+            <motion.div
+              className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+            >
+              <motion.div
+                className="text-green-500 text-6xl mb-4"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                ✅
+              </motion.div>
+              <h2 className="text-2xl font-bold mb-2">
+                Attendance Registered!
+              </h2>
+              <p className="text-gray-600">
+                Thanks for Coming. Please enjoy the concert 🎉
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
