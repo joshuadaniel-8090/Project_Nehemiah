@@ -133,21 +133,21 @@ export default function AdminDashboard() {
 
     const message = `🎉 *Project Nehemiah Ticket Details* 🎉
 
-Hey *${registration.name}*,
+      Hey *${registration.name}*,
 
-Your registration for *${
-      registration.ticket_count || 1
-    }* ticket(s) has been successfully verified. ✅
+      Your registration for *${
+        registration.ticket_count || 1
+      }* ticket(s) has been successfully verified. ✅
 
-🎟️ *Ticket Numbers:* ${
-      Array.isArray(registration.raffle_numbers)
-        ? registration.raffle_numbers.join(", ")
-        : registration.raffle_numbers
-    }
+      🎟️ *Ticket Numbers:* ${
+        Array.isArray(registration.raffle_numbers)
+          ? registration.raffle_numbers.join(", ")
+          : registration.raffle_numbers
+      }
 
-✨ Thanks for participating in *Project Nehemiah*!  
-You can view your tickets here:  
-🔗 https://project-nehemiah.vercel.app/view-ticket`;
+      ✨ Thanks for participating in *Project Nehemiah*!  
+      You can view your tickets here:  
+      🔗 https://project-nehemiah.vercel.app/view-ticket`;
 
     navigator.clipboard
       .writeText(message)
