@@ -33,52 +33,69 @@ export default function EventPage() {
   const lastAttendanceStatus = useRef<boolean | null>(null);
 
   // Fetch user by phone
-  const handleLogin = async () => {
-    setError("");
-    setRegistration(null);
+  // Fetch user by phone
+const handleLogin = async () => {
+  setError("");
+  setRegistration(null);
 
-    const { data, error } = await supabase
-      .from("registrations")
-      .select("*")
-      .eq("phone", phone)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("registrations")
+    .select("*")
+    .eq("phone", phone);
 
-    if (error) {
-      const errorMsg = `Database error: ${error.message}`;
-      setError(errorMsg);
-      toast.error(errorMsg);
-      return;
-    }
+  if (error) {
+    const errorMsg = `Database error: ${error.message}`;
+    setError(errorMsg);
+    toast.error(errorMsg);
+    return;
+  }
 
-    if (!data) {
-      const errorMsg =
-        "This phone number is not registered. Please enter your correct phone number that has a valid ticket.";
-      setError(errorMsg);
-      toast.error(errorMsg);
-      return;
-    }
+  if (!data || data.length === 0) {
+    const errorMsg =
+      "This phone number is not registered. Please enter your correct phone number that has a valid ticket.";
+    setError(errorMsg);
+    toast.error(errorMsg);
+    return;
+  }
 
-    // ✅ Extra check for Status column
-    if (data.status !== "verified") {
-      const errorMsg =
-        "Your ticket is not yet verified. Please wait until it gets approved.";
-      setError(errorMsg);
-      toast.error(errorMsg);
-      return;
-    }
+  // ✅ Extra check for Status column
+  const verifiedTickets = data.filter((row) => row.status === "verified");
 
-    const normalizedData: Registration = {
-      ...data,
-      raffle_numbers: Array.isArray(data.raffle_numbers)
-        ? data.raffle_numbers
-        : typeof data.raffle_numbers === "string"
-        ? JSON.parse(data.raffle_numbers)
-        : [],
-    };
+  if (verifiedTickets.length === 0) {
+    const errorMsg =
+      "Your tickets are not yet verified. Please wait until they get approved.";
+    setError(errorMsg);
+    toast.error(errorMsg);
+    return;
+  }
 
-    setRegistration(normalizedData);
-    lastAttendanceStatus.current = normalizedData.attendance_present;
+  // Merge raffle_numbers & ticket_count for all verified rows
+  const merged: Registration = {
+    id: verifiedTickets[0].id, // just keep the first id
+    name: verifiedTickets[0].name,
+    phone: verifiedTickets[0].phone,
+    ticket_count: verifiedTickets.reduce(
+      (sum, row) => sum + (row.ticket_count || 0),
+      0
+    ),
+    raffle_numbers: verifiedTickets.flatMap((row) =>
+      Array.isArray(row.raffle_numbers)
+        ? row.raffle_numbers
+        : typeof row.raffle_numbers === "string"
+        ? JSON.parse(row.raffle_numbers)
+        : []
+    ),
+    attendance_present: verifiedTickets.some(
+      (row) => row.attendance_present
+    ),
+    attendance_time:
+      verifiedTickets.find((row) => row.attendance_time)?.attendance_time ||
+      null,
   };
+
+  setRegistration(merged);
+  lastAttendanceStatus.current = merged.attendance_present;
+};
 
   // Poll registration every 1s for auto-refresh
   useEffect(() => {
