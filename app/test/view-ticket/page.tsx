@@ -182,45 +182,6 @@ export default function EventPage() {
             <h1 className="text-3xl font-bold text-gray-100">
               🎟️ Project Nehemiah Ticket Details
             </h1>
-
-            {/* QR Code or Success Check */}
-            {!registration.attendance_present ? (
-              <div className="p-4 bg-white border border-white/20 rounded-xl inline-block shadow-lg">
-                <QRCode
-                  value={`https://project-nehemiah.vercel.app/api/mark-attendance?id=${registration.id}`}
-                  size={200}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <CheckCircle className="w-20 h-20 text-green-400 mb-2" />
-                <p className="text-green-400 text-xl font-bold">
-                  Attendance Registered
-                </p>
-              </div>
-            )}
-
-            {/* Ticket Info */}
-            <div className="mt-4 space-y-3 text-gray-200">
-              <p className="text-3xl py-2 text-cyan-400 font-semibold">
-                {registration.name}
-              </p>
-              <p className="text-2xl">
-                Tickets:{" "}
-                <span className="text-2xl font-bold text-cyan-400">
-                  {registration.ticket_count}
-                </span>
-              </p>
-              <p className="text-2xl">
-                Ticket Numbers:{" "}
-                <span className="text-2xl text-cyan-400 font-bold">
-                  {registration.raffle_numbers.length > 0
-                    ? registration.raffle_numbers.join(", ")
-                    : "N/A"}
-                </span>
-              </p>
-            </div>
-
             {/* Status Banner */}
             <div
               className={`p-4 rounded-xl font-semibold text-lg shadow-md ${
@@ -247,6 +208,59 @@ export default function EventPage() {
                       : "Unknown time"
                   }`
                 : "⚠️ Attendance not registered yet. Please show the QR code to the event staff."}
+            </div>
+
+            {/* QR Code or Success Check */}
+            {!registration.attendance_present ? (
+              <div className="p-4 bg-white border border-white/20 rounded-xl inline-block shadow-lg">
+                <QRCode
+                  value={`https://project-nehemiah.vercel.app/api/mark-attendance?id=${registration.id}`}
+                  size={200}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <CheckCircle className="w-20 h-20 text-green-400 mb-2" />
+                <p className="text-green-400 text-xl font-bold">
+                  Attendance Registered
+                </p>
+              </div>
+            )}
+
+            {/* Ticket Info */}
+            <div className="relative mt-6 p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl border border-slate-700 overflow-hidden">
+              {/* Glow accent */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.15),transparent_60%)]"></div>
+
+              {/* Name */}
+              <p className="relative text-center text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-lg tracking-wide">
+                {registration.name}
+              </p>
+
+              {/* Stacked items */}
+              <div className="relative mt-6 flex flex-col gap-6">
+                {/* Ticket Count */}
+                <div className="flex flex-col items-center justify-center bg-slate-800/60 rounded-xl py-5 backdrop-blur-md border border-slate-700 hover:border-cyan-400 transition">
+                  <p className="text-gray-400 text-sm uppercase tracking-widest">
+                    Total Tickets
+                  </p>
+                  <p className="text-3xl font-bold text-cyan-400 mt-1 drop-shadow-md">
+                    {registration.ticket_count}
+                  </p>
+                </div>
+
+                {/* Ticket Numbers */}
+                <div className="flex flex-col items-center justify-center bg-slate-800/60 rounded-xl py-5 backdrop-blur-md border border-slate-700 hover:border-cyan-400 transition">
+                  <p className="text-gray-400 text-sm uppercase tracking-widest">
+                    Ticket Numbers
+                  </p>
+                  <p className="text-2xl font-semibold text-cyan-300 mt-1 text-center leading-relaxed break-words">
+                    {registration.raffle_numbers.length > 0
+                      ? registration.raffle_numbers.join(", ")
+                      : "N/A"}
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         )}
