@@ -164,7 +164,11 @@ export default function ProjectNehemiahLanding() {
                   href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6"
                   className="my-8"
                 >
-                  <Button className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-md px-4">
+                  <Button
+                    className="px-4 py-2 text-base rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
+                  >
                     Open in Maps
                   </Button>
                 </a>
@@ -239,9 +243,9 @@ export default function ProjectNehemiahLanding() {
               Already Registered?
             </p>
             <Button
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
-               transform transition-all duration-300 hover:scale-105"
+              className="px-8 py-7 text-lg rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
               onClick={() => (window.location.href = "/view-ticket")}
             >
               🎟️ View Ticket

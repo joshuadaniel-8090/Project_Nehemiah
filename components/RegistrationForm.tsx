@@ -189,7 +189,9 @@ export default function RegistrationForm() {
             </p>
             <Button
               onClick={() => window.location.reload()}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="px-10 py-7 text-xl rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
             >
               Register Another Person
             </Button>
@@ -226,9 +228,9 @@ export default function RegistrationForm() {
             </p>
             <Button
               onClick={() => setShowUPIAlert(false)}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
-               transform transition-all duration-300 hover:scale-105"
+              className="px-8 py-3 text-lg rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
             >
               Got it
             </Button>
@@ -259,13 +261,17 @@ export default function RegistrationForm() {
                   setShowConfirmPopup(false);
                   handleSubmit();
                 }}
-                className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl"
+                className="px-10 py-3 text-lg rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
               >
                 Yes, I Paid
               </Button>
               <Button
                 onClick={() => setShowConfirmPopup(false)}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-xl"
+                className="px-10 py-3 text-lg rounded-full text-white font-semibold 
+               bg-white/40 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
               >
                 Go Back
               </Button>
@@ -394,9 +400,9 @@ export default function RegistrationForm() {
 
             <div className="flex justify-center mt-8">
               <Button
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-               text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
-               transform transition-all duration-300 hover:scale-105 flex items-center"
+                className="px-8 py-6 text-xl rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
                 onClick={() => validateStep1() && setShowPaymentPage(true)}
               >
                 Proceed to Pay (₹{formData.ticketCount * TICKET_PRICE})
@@ -489,13 +495,13 @@ export default function RegistrationForm() {
               <Button
                 onClick={() => setShowConfirmPopup(true)}
                 disabled={isLoading || !formData.upiName.trim()}
-                className={`bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 
-      text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg 
-      transform transition-all duration-300 hover:scale-105 flex items-center justify-center ${
-        isLoading || !formData.upiName.trim()
-          ? "bg-gray-500 cursor-not-allowed"
-          : "bg-cyan-500 hover:bg-cyan-600"
-      }`}
+                className={`px-8 py-6 text-xl rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200 ${
+                 isLoading || !formData.upiName.trim()
+                   ? "bg-gray-500 cursor-not-allowed"
+                   : "bg-white/10 hover:scale-110"
+               }`}
               >
                 {isLoading ? "Submitting..." : "Complete Registration"}
               </Button>
