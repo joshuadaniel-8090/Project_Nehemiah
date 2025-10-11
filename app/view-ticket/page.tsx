@@ -201,7 +201,7 @@ export default function EventPage() {
             </h1>
 
             {/* Status Banner */}
-            {/* <div
+            <div
               className={`p-4 rounded-xl font-semibold text-lg shadow-md ${
                 reg.attendance_present
                   ? "bg-green-100 text-green-700"
@@ -223,10 +223,10 @@ export default function EventPage() {
                       : "Unknown time"
                   }`
                 : "⚠️ Attendance not registered yet. Please show the QR code to the event staff."}
-            </div> */}
+            </div>
 
             {/* QR Code or Success Check */}
-            {/* {!reg.attendance_present ? (
+            {!reg.attendance_present ? (
               <div className="p-4 bg-white border border-white/20 rounded-xl inline-block shadow-lg">
                 <QRCode
                   value={`https://project-nehemiah.vercel.app/api/mark-attendance?id=${reg.id}`}
@@ -240,7 +240,7 @@ export default function EventPage() {
                   Attendance Registered
                 </p>
               </div>
-            )} */}
+            )}
 
             {/* Ticket Info */}
             <div className="relative mt-6 p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl border border-slate-700 overflow-hidden">
