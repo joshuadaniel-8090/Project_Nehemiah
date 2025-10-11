@@ -180,7 +180,9 @@ export default function EventPage() {
             <div className="flex justify-center mt-6">
               <Button
                 onClick={handleLogin}
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-full px-8 py-3 text-lg font-semibold shadow-lg transform transition-all duration-300 hover:scale-105"
+                className="px-8 py-7 text-lg rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
               >
                 View Tickets
               </Button>
@@ -196,13 +198,13 @@ export default function EventPage() {
           className="relative z-10 w-full max-w-md mx-auto bg-black/50 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl text-gray-100"
         >
           <CardContent className="text-center py-6 space-y-6">
-            <h1 className="text-3xl font-bold text-gray-100">
-              🎟️ Ticket Details
+            <h1 className="text-xl font-bold text-gray-100">
+              🎟️ Project Nehemiah Ticket Details
             </h1>
 
             {/* Status Banner */}
             <div
-              className={`p-4 rounded-xl font-semibold text-lg shadow-md ${
+              className={`p-4 rounded-xl font-semibold text-base shadow-md ${
                 reg.attendance_present
                   ? "bg-green-100 text-green-700"
                   : "bg-yellow-100 text-yellow-700"
