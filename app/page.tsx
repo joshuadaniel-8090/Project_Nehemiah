@@ -7,9 +7,11 @@ import Image from "next/image";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Analytics } from "@vercel/analytics/next";
+import { useRouter } from "next/navigation";
 
 export default function ProjectNehemiahLanding() {
   const detailsRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   const scrollToDetails = () => {
     detailsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,6 +33,23 @@ export default function ProjectNehemiahLanding() {
 
         {/* Hero Section */}
         <div className="h-screen flex items-center justify-center text-center">
+          {/* Floating "Don't See" button */}
+          <div className="absolute top-6 right-6 z-50">
+            <motion.button
+              onClick={() => router.push("/lyrics")}
+              animate={{ y: [10, -30, 10] }} // bounce up 10px then back
+              transition={{
+                repeat: Infinity,
+                duration: 1.5,
+                ease: "easeInOut",
+              }}
+              className="px-4 py-2 rounded-full text-white font-semibold 
+               bg-white/10 backdrop-blur-md border border-white/20 
+               shadow-lg hover:scale-110 transition-transform duration-200"
+            >
+              Lyrics
+            </motion.button>
+          </div>
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -106,17 +125,6 @@ export default function ProjectNehemiahLanding() {
               where generations will gather to worship, grow and encounter God.
             </p>
 
-            {/* <motion.blockquote
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.6, duration: 1 }}
-            className="mt-10 italic text-gray-300 text-lg md:text-xl font-light"
-          >
-            “So we built the wall and the entire wall was joined together up to
-            half its height, for the people had a mind to work.”{" "}
-            <span className="text-cyan-400 font-semibold">- Nehemiah 4:6</span>
-          </motion.blockquote> */}
             <motion.blockquote
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -161,13 +169,6 @@ export default function ProjectNehemiahLanding() {
                   </Button>
                 </a>
               </div>
-              {/* <div className="flex items-center justify-center mt-8">
-              <a href="https://maps.app.goo.gl/JXyBR5YQRNqb46JF6">
-                <Button className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-md px-4 mb-4">
-                  Open in Maps
-                </Button>
-              </a>
-            </div> */}
             </div>
 
             <div className="hidden md:flex items-center">
@@ -199,7 +200,6 @@ export default function ProjectNehemiahLanding() {
           </motion.div>
         </section>
 
-        {/* Call to Action */}
         {/* Call to Action */}
         <section className="py-10 px-6 text-center">
           <motion.div
