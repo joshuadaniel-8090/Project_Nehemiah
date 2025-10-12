@@ -299,7 +299,7 @@ export default function EventPage() {
                     >
                       ✅
                     </motion.div>
-                    <h2 className="text-2xl font-bold mb-2">
+                    <h2 className="text-2xl text-black font-bold mb-2">
                       Attendance Registered!
                     </h2>
                     <p className="text-gray-600">
