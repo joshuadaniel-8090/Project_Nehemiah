@@ -466,9 +466,10 @@ export default function RegistrationForm() {
 
               <div className="p-4 bg-white border border-white rounded-xl">
                 <QRCode
-                  value={`upi://pay?pa=shajanjacques@oksbi&pn=Event+Registration&am=${amount}&cu=INR&tn=${encodeURIComponent(
-                    `Event Registration of ₹${amount}`
-                  )}`}
+                  value={`sample qr code`}
+                  // value={`upi://pay?pa=shajanjacques@oksbi&pn=Event+Registration&am=${amount}&cu=INR&tn=${encodeURIComponent(
+                  //   `Event Registration of ₹${amount}`
+                  // )}`}
                   size={160}
                 />
               </div>
